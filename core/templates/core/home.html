@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parqueando Ando</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container text-center py-4">
+        <h1 class="display-5">🅿️arqueando-Ando</h1>
+        <p class="lead text-muted"> </p>
+    </div>
+
+    <!-- ================================================================
+         REQUERIMIENTO FR10: Tiempo estimado de espera por parqueadero
+         Cada tarjeta muestra ocupación y el tiempo estimado calculado en
+         core/waiting_time.py. Si no hay parqueaderos cargados todavía,
+         se muestra un aviso en vez de una sección vacía.
+         ================================================================ -->
+    <div class="container mb-5">
+        <h2 class="h4 mb-3">Disponibilidad de parqueaderos</h2>
+
+        {% if parking_lots %}
+        <div class="row g-3">
+            {% for item in parking_lots %}
+            <div class="col-12 col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h3 class="h5 card-title">{{ item.lot.name }}</h3>
+                        <p class="card-text mb-1">
+                            Ocupados: {{ item.lot.occupied_spaces }} / {{ item.lot.total_capacity }}
+                        </p>
+                        <span class="badge
+                            {% if item.waiting_time.level == 'low' %}bg-success
+                            {% elif item.waiting_time.level == 'medium' %}bg-warning text-dark
+                            {% else %}bg-danger{% endif %}">
+                            {{ item.waiting_time.label }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">
+            Todavía no hay parqueaderos cargados. Se pueden agregar desde /admin/.
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- ================================================================
+         REQUERIMIENTO FR37 Nicolas M: Enlaces a apps de transporte externo
+         La lista de botones sale de core/transport_links.py; para agregar
+         o quitar un servicio no hace falta tocar este template.
+         ================================================================ -->
+    <div class="container mb-5">
+        <h2 class="h4 mb-3">¿El parqueadero esta lleno? COnsidera estas opciones:</h2>
+        <p class="subtitle">Viaja a EAFIT sin preocuparte por el parqueadero. Elige tu servicio de transporte preferido y llega al campus de forma rapido y sencilla.
+        </p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            {% for link in transport_links %}
+            <a href="{{ link.url }}"
+               class="btn btn-outline-primary"
+               target="_blank" rel="noopener noreferrer"
+               title="{{ link.description }}">
+                {{ link.icon }} {{ link.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
