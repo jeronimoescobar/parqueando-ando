@@ -75,4 +75,18 @@ class HomeViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "PARQUEADERO LLENO")
 
+    def test_home_view_displays_vehicle_capacity_breakdown(self):
+        ParkingLot.objects.create(
+            name="Parqueadero con desglose",
+            slug="parqueadero-con-desglose",
+            total_capacity=110,
+            capacity_cars=103,
+            capacity_motorcycles=4,
+            capacity_accessibility=3,
+        )
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "Carros: 103")
+        self.assertContains(response, "Motos: 4")
+        self.assertContains(response, "Movilidad reducida: 3")
+
 
