@@ -51,6 +51,13 @@
                         <p class="card-text mb-1">
                             Ocupados: {{ item.lot.occupied_spaces }} / {{ item.lot.total_capacity }}
                         </p>
+
+                        {% if item.lot.occupied_spaces >= item.lot.total_capacity %}
+                            <div class="alert alert-danger mt-2 mb-0" role="alert">
+                                🚨 Parqueadero lleno. No hay espacios disponibles.
+                            </div>
+                        {% endif %}
+                        
                         <span class="badge
                             {% if item.waiting_time.level == 'low' %}bg-success
                             {% elif item.waiting_time.level == 'medium' %}bg-warning text-dark
