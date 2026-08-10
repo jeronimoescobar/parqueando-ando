@@ -17,26 +17,26 @@
     </div>
 
     <!-- ================================================================
-     REQUERIMIENTO FR8: Mostrar mapa del estacionamiento
-     Muestra la ubicación de los tres parqueaderos de EAFIT.
-     ================================================================ -->
-<div class="container mb-5">
-    <h2 class="h4 mb-3">Mapa de estacionamientos EAFIT</h2>
+         REQUERIMIENTO FR8: Mostrar mapa del estacionamiento
+         Muestra la ubicación de los tres parqueaderos de EAFIT.
+         ================================================================ -->
+    <div class="container mb-5">
+        <h2 class="h4 mb-3">Mapa de estacionamientos EAFIT</h2>
 
-    <p class="text-muted">
-        Consulta la ubicación de los parqueaderos disponibles en el campus.
-    </p>
+        <p class="text-muted">
+            Consulta la ubicación de los parqueaderos disponibles en el campus.
+        </p>
 
-    <div id="parking-map"
-         style="height: 500px; width: 100%; border-radius: 12px;">
+        <div id="parking-map"
+             style="height: 500px; width: 100%; border-radius: 12px;">
+        </div>
     </div>
-</div>
 
     <!-- ================================================================
-         REQUERIMIENTO FR10: Tiempo estimado de espera por parqueadero
-         Cada tarjeta muestra ocupación y el tiempo estimado calculado en
-         core/waiting_time.py. Si no hay parqueaderos cargados todavía,
-         se muestra un aviso en vez de una sección vacía.
+         REQUERIMIENTO FR5 & FR6: Listado de parqueaderos y estado de ocupación
+         Cada tarjeta muestra la ocupación reportada, celdas disponibles, el estado
+         (Disponible / Limitado / Lleno), mensaje explícito cuando está lleno
+         y el tiempo estimado de espera (FR10).
          ================================================================ -->
     <div class="container mb-5">
         <h2 class="h4 mb-3">Disponibilidad de parqueaderos</h2>
@@ -45,36 +45,51 @@
         <div class="row g-3">
             {% for item in parking_lots %}
             <div class="col-12 col-md-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm {% if item.lot.occupancy_status == 'full' %}border-danger{% endif %}">
                     <div class="card-body">
-                        <h3 class="h5 card-title">{{ item.lot.name }}</h3>
-                        <p class="card-text mb-1">
-                            Ocupados: {{ item.lot.occupied_spaces }} / {{ item.lot.total_capacity }}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="h5 card-title mb-0">{{ item.lot.name }}</h3>
+                            <span class="badge 
+                                {% if item.lot.occupancy_status == 'available' %}bg-success
+                                {% elif item.lot.occupancy_status == 'limited' %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ item.lot.occupancy_status_display }}
+                            </span>
+                        </div>
+
+                        <p class="card-text mb-2 text-muted">
+                            <small class="text-secondary">Capacidad total: <strong>{{ item.lot.total_capacity }} celdas</strong></small>
                         </p>
 
-                        {% if item.lot.occupied_spaces >= item.lot.total_capacity %}
-                            <div class="alert alert-danger mt-2 mb-0" role="alert">
-                                🚨 Parqueadero lleno. No hay espacios disponibles.
-                            </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Espera estimada:</small>
+                            <span class="badge 
+                                {% if item.waiting_time.level == 'low' %}bg-success
+                                {% elif item.waiting_time.level == 'medium' %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ item.waiting_time.label }}
+                            </span>
+                        </div>
+
+                        {% if item.lot.occupancy_status == 'full' %}
+                        <div class="alert alert-danger py-2 px-3 mt-3 mb-0 text-center fw-bold small" role="alert">
+                            ⚠️ ¡PARQUEADERO LLENO! No hay celdas disponibles.
+                        </div>
                         {% endif %}
-                        
-                        <span class="badge
-                            {% if item.waiting_time.level == 'low' %}bg-success
-                            {% elif item.waiting_time.level == 'medium' %}bg-warning text-dark
-                            {% else %}bg-danger{% endif %}">
-                            {{ item.waiting_time.label }}
-                        </span>
+
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
+
         {% else %}
         <p class="text-muted">
             Todavía no hay parqueaderos cargados. Se pueden agregar desde /admin/.
         </p>
         {% endif %}
     </div>
+
 
     <!-- ================================================================
          REQUERIMIENTO FR37 Nicolas M: Enlaces a apps de transporte externo
