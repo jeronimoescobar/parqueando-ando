@@ -71,6 +71,14 @@
                             <small class="text-secondary">Capacidad total: <strong>{{ item.lot.total_capacity }} celdas</strong></small>
                         </p>
 
+                        {% if item.lot.has_vehicle_type_breakdown %}
+                        <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Distribución de cupos">
+                            <span class="badge text-bg-primary">Carros: {{ item.lot.capacity_cars }}</span>
+                            <span class="badge text-bg-secondary">Motos: {{ item.lot.capacity_motorcycles }}</span>
+                            <span class="badge text-bg-info">Movilidad reducida: {{ item.lot.capacity_accessibility }}</span>
+                        </div>
+                        {% endif %}
+
                         <div class="mb-2">
                             <small class="text-muted">Espera estimada:</small>
                             <span class="badge 
@@ -107,7 +115,7 @@
          o quitar un servicio no hace falta tocar este template.
          ================================================================ -->
     <div class="container mb-5">
-        <h2 class="h4 mb-3">¿El parqueadero esta lleno? COnsidera estas opciones:</h2>
+        <h2 class="h4 mb-3">¿El parqueadero esta lleno? Considera estas opciones:</h2>
         <p class="subtitle">Viaja a EAFIT sin preocuparte por el parqueadero. Elige tu servicio de transporte preferido y llega al campus de forma rapido y sencilla.
         </p>
         <div class="d-flex flex-wrap justify-content-center gap-2">
@@ -176,6 +184,16 @@
     ])
     .addTo(parkingMap)
     .bindPopup("<strong>Parqueadero Parque de los Guayabos</strong>");
+
+    // Parqueadero de Empleados
+    L.marker([
+        6.199621838918419,
+        -75.57792203235827
+    ])
+    .addTo(parkingMap)
+
+    .bindPopup("<strong>Parqueadero de Empleados</strong>");
 </script>
+
 </body>
 </html>
