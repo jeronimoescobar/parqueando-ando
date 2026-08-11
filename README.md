@@ -1,3 +1,12 @@
+Aplicación web colaborativa para consultar y reportar la disponibilidad de
+parqueaderos en el campus de la Universidad EAFIT.
+
+## Cómo correrlo el proyecto localmente
+
+### Requisito
+
+Se requiere **Python 3.12 o superior**, porque el proyecto usa Django 6.
+
 ### Windows (CMD o PowerShell)
 
 ```bat
