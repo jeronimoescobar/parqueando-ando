@@ -5,7 +5,7 @@ Aplicación web colaborativa para consultar y reportar la disponibilidad de
 parqueaderos en el campus de la Universidad EAFIT.
 
 ## Cómo correrlo el proyecto localmente
-
+Tener una versión de python 3.12 o mayor, para poder ejecutarlo correctamente
 ```bash
 # 1. Crear y activar entorno virtual
 python3 -m venv venv
