@@ -1,15 +1,9 @@
+### Windows (CMD o PowerShell)
 
-# Parqueando Ando — Base del proyecto (Sprint 1)
-
-Aplicación web colaborativa para consultar y reportar la disponibilidad de
-parqueaderos en el campus de la Universidad EAFIT.
-
-## Cómo correrlo el proyecto localmente
-Tener una versión de python 3.12 o mayor, para poder ejecutarlo correctamente
-```bash
-# 1. Crear y activar entorno virtual
-python3.12 -m venv venv
-source venv/bin/activate      # En Windows: venv\Scripts\activate
+```bat
+# 1. Crear y activar el entorno virtual con Python 3.12
+py -3.12 -m venv venv
+venv\Scripts\activate
 
 # 2. Instalar dependencias
 pip install -r requirements.txt
@@ -17,25 +11,28 @@ pip install -r requirements.txt
 # 3. Aplicar migraciones (crea la base de datos SQLite local)
 python manage.py migrate
 
-# 4. Crear un usuario administrador
+# 4. Crear usuario administrador (opcional; necesario para usar /admin/)
 python manage.py createsuperuser
 
-# 5. Levantar el servidor de desarrollo
+# 5. Iniciar el servidor de desarrollo
 python manage.py runserver
 ```
 
+### macOS o Linux
 
-Luego abre `http://127.0.0.1:8000/` en el navegador. Necesitas iniciar
-sesión (`/accounts/login/`) para ver el listado y reportar disponibilidad.
-Puedes crear zonas de parqueo de prueba desde `/admin/`.
+```bash
+# 1. Crear y activar el entorno virtual con Python 3.12
+python3.12 -m venv venv
+source venv/bin/activate
 
-
+# 2. Instalar dependencias y ejecutar el proyecto
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
 ```
-parqueando_ando/   # Configuración del proyecto (settings, urls)
-core/               # App base con la página de bienvenida temporal
-manage.py
-requirements.txt
-```
 
-
+Luego abre `http://127.0.0.1:8000/` en el navegador. La página principal es
+pública; no requiere iniciar sesión. Si deseas crear o editar parqueaderos y
+su disponibilidad, ingresa a `http://127.0.0.1:8000/admin/` con el usuario
+administrador creado en el paso 4.
 
