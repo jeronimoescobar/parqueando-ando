@@ -8,7 +8,7 @@ parqueaderos en el campus de la Universidad EAFIT.
 Tener una versión de python 3.12 o mayor, para poder ejecutarlo correctamente
 ```bash
 # 1. Crear y activar entorno virtual
-python3 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate      # En Windows: venv\Scripts\activate
 
 # 2. Instalar dependencias
