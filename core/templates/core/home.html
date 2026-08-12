@@ -43,6 +43,27 @@
     </div>
 
     <!-- ================================================================
+         REQUERIMIENTO FR9: Recomendación de parqueadero
+         Destaca el parqueadero con más disponibilidad proporcional entre
+         los que no están llenos. La lógica vive en
+         core/parking_recommendation.py.
+         ================================================================ -->
+    {% if recommended_lot %}
+    <div class="container mb-4">
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-0" role="alert">
+            <span class="fs-4">👍</span>
+            <div>
+                <strong>Parqueadero recomendado: {{ recommended_lot.name }}</strong>
+                <div class="small">
+                    Es el que tiene mayor disponibilidad en este momento
+                    ({{ recommended_lot.available_spaces }} de {{ recommended_lot.total_capacity }} celdas libres).
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ================================================================
          REQUERIMIENTO FR5 & FR6: Listado de parqueaderos y estado de ocupación
          Cada tarjeta muestra la ocupación reportada, celdas disponibles, el estado
          (Disponible / Limitado / Lleno), mensaje explícito cuando está lleno
@@ -70,6 +91,32 @@
                         <p class="card-text mb-2 text-muted">
                             <small class="text-secondary">Capacidad total: <strong>{{ item.lot.total_capacity }} celdas</strong></small>
                         </p>
+
+                        <!-- ========================================================
+                             REQUERIMIENTO FR7: Mostrar estado de ocupación (detalle)
+                             Barra de progreso con el porcentaje exacto de ocupación
+                             y el conteo de celdas ocupadas/disponibles.
+                             ======================================================== -->
+                        <div class="mb-3" aria-label="Estado de ocupación">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Ocupación</small>
+                                <small class="text-muted">{{ item.lot.occupancy_percentage }}%</small>
+                            </div>
+                            <div class="progress" role="progressbar"
+                                 aria-valuenow="{{ item.lot.occupancy_percentage }}"
+                                 aria-valuemin="0" aria-valuemax="100"
+                                 style="height: 8px;">
+                                <div class="progress-bar
+                                    {% if item.lot.occupancy_status == 'available' %}bg-success
+                                    {% elif item.lot.occupancy_status == 'limited' %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                    style="width: {{ item.lot.occupancy_percentage }}%;">
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {{ item.lot.occupied_spaces }} ocupadas · {{ item.lot.available_spaces }} disponibles
+                            </small>
+                        </div>
 
                         {% if item.lot.has_vehicle_type_breakdown %}
                         <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Distribución de cupos">

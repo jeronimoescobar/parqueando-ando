@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from .models import ParkingLot
+from .parking_recommendation import recommend_parking_lot
 
 
 class ParkingLotModelTest(TestCase):
@@ -44,6 +45,45 @@ class ParkingLotModelTest(TestCase):
         self.assertEqual(full_lot.occupancy_status, "full")
         self.assertEqual(full_lot.occupancy_status_display, "Lleno")
 
+    def test_fr7_occupancy_percentage(self):
+        lot = ParkingLot.objects.create(
+            name="Parqueadero Percentage", slug="parqueadero-percentage",
+            total_capacity=200, occupied_spaces=50,
+        )
+        self.assertEqual(lot.occupancy_percentage, 25)
+
+    def test_fr7_occupancy_percentage_zero_capacity(self):
+        lot = ParkingLot.objects.create(
+            name="Sin capacidad", slug="sin-capacidad",
+            total_capacity=0, occupied_spaces=0,
+        )
+        self.assertEqual(lot.occupancy_percentage, 0)
+
+
+class ParkingRecommendationTest(TestCase):
+    def test_fr9_recommends_lot_with_most_availability(self):
+        busy_lot = ParkingLot.objects.create(
+            name="Ocupado", slug="ocupado", total_capacity=100, occupied_spaces=90,
+        )
+        free_lot = ParkingLot.objects.create(
+            name="Libre", slug="libre-recomendado", total_capacity=100, occupied_spaces=10,
+        )
+        recommended = recommend_parking_lot([busy_lot, free_lot])
+        self.assertEqual(recommended, free_lot)
+
+    def test_fr9_no_recommendation_when_all_full(self):
+        full_lot_1 = ParkingLot.objects.create(
+            name="Lleno 1", slug="lleno-1", total_capacity=50, occupied_spaces=50,
+        )
+        full_lot_2 = ParkingLot.objects.create(
+            name="Lleno 2", slug="lleno-2", total_capacity=30, occupied_spaces=30,
+        )
+        recommended = recommend_parking_lot([full_lot_1, full_lot_2])
+        self.assertIsNone(recommended)
+
+    def test_fr9_no_recommendation_when_no_lots(self):
+        self.assertIsNone(recommend_parking_lot([]))
+
 
 class HomeViewTest(TestCase):
     def test_home_view_displays_parking_lots(self):
@@ -74,6 +114,27 @@ class HomeViewTest(TestCase):
         response = self.client.get(reverse("home"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "PARQUEADERO LLENO")
+
+    def test_fr9_home_view_shows_recommended_lot(self):
+        ParkingLot.objects.create(
+            name="Parqueadero Congestionado", slug="parqueadero-congestionado",
+            total_capacity=100, occupied_spaces=95,
+        )
+        ParkingLot.objects.create(
+            name="Parqueadero Recomendado", slug="parqueadero-recomendado",
+            total_capacity=100, occupied_spaces=5,
+        )
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "Parqueadero recomendado: Parqueadero Recomendado")
+
+    def test_fr7_home_view_shows_occupancy_percentage(self):
+        ParkingLot.objects.create(
+            name="Parqueadero Detalle", slug="parqueadero-detalle",
+            total_capacity=100, occupied_spaces=30,
+        )
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "30%")
+        self.assertContains(response, "30 ocupadas")
 
     def test_home_view_displays_vehicle_capacity_breakdown(self):
         ParkingLot.objects.create(

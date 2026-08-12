@@ -65,6 +65,11 @@ class ParkingLot(models.Model):
         return "Disponible"
 
     @property
+    def occupancy_percentage(self):
+        """Porcentaje de ocupación (0-100), redondeado, para FR7."""
+        return round(self.occupancy_ratio * 100)
+
+    @property
     def has_vehicle_type_breakdown(self):
         """Indica si el parqueadero tiene desglose por tipo de vehículo configurado."""
         return any([

@@ -12,16 +12,20 @@ duplicar la ruta "/".
 from django.shortcuts import render
 
 from .models import ParkingLot
+from .parking_recommendation import recommend_parking_lot
 from .transport_links import TRANSPORT_LINKS
 from .waiting_time import estimate_waiting_time
 
 
 def _build_home_context():
     """Arma el contexto del home: parqueaderos con su tiempo estimado
-    de espera (Requerimiento 1) y los enlaces de transporte externo
-    (Requerimiento 2)."""
+    de espera (Requerimiento 1), los enlaces de transporte externo
+    (Requerimiento 2), el porcentaje de ocupación (FR7) y el parqueadero
+    recomendado según disponibilidad (FR9)."""
+    lots = list(ParkingLot.objects.all())
+
     parking_lots = []
-    for lot in ParkingLot.objects.all():
+    for lot in lots:
         parking_lots.append({
             "lot": lot,
             "waiting_time": estimate_waiting_time(lot),
@@ -30,6 +34,7 @@ def _build_home_context():
     return {
         "parking_lots": parking_lots,
         "transport_links": TRANSPORT_LINKS,
+        "recommended_lot": recommend_parking_lot(lots),
     }
 
 
