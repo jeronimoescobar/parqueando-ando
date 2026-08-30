@@ -34,6 +34,11 @@ class ParkingLot(models.Model):
         verbose_name="Celdas para personas con movilidad reducida (PMR)",
     )
 
+    # Ocupación específica
+    occupied_cars = models.PositiveIntegerField(default=0)
+    occupied_motorcycles = models.PositiveIntegerField(default=0)
+    occupied_accessibility = models.PositiveIntegerField(default=0)
+
     # ── Propiedades calculadas ─────────────────────────────────────────────
     @property
     def occupancy_ratio(self):
@@ -44,6 +49,18 @@ class ParkingLot(models.Model):
     @property
     def available_spaces(self):
         return max(self.total_capacity - self.occupied_spaces, 0)
+
+    @property
+    def available_cars(self):
+        return max(self.capacity_cars - self.occupied_cars, 0)
+
+    @property
+    def available_motorcycles(self):
+        return max(self.capacity_motorcycles - self.occupied_motorcycles, 0)
+
+    @property
+    def available_accessibility(self):
+        return max(self.capacity_accessibility - self.occupied_accessibility, 0)
 
     @property
     def occupancy_status(self):
