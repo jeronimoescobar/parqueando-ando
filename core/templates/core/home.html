@@ -107,8 +107,37 @@
                         </div>
                         {% endif %}
 
-                        <div class="mt-3">
-                            <small class="text-muted d-block mb-2 text-center">✅ Reportar espacio disponible:</small>
+                        <div class="mt-3 border-top pt-3">
+                            <!-- FR22: Ocupar espacio -->
+                            <small class="text-muted d-block mb-2 text-center">👇 Acabo de llegar (Ocupar espacio):</small>
+                            <div class="d-flex gap-2 justify-content-center mb-3">
+                                {% if item.lot.capacity_cars > 0 %}
+                                <form action="{% url 'report_occupied' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="car">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">🚗 Carro</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if item.lot.capacity_motorcycles > 0 %}
+                                <form action="{% url 'report_occupied' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="motorcycle">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">🏍️ Moto</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if item.lot.capacity_accessibility > 0 %}
+                                <form action="{% url 'report_occupied' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="accessibility">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">♿ PMR</button>
+                                </form>
+                                {% endif %}
+                            </div>
+
+                            <!-- FR21: Liberar espacio -->
+                            <small class="text-muted d-block mb-2 text-center">👋 Me voy (Liberar espacio):</small>
                             <div class="d-flex gap-2 justify-content-center">
                                 {% if item.lot.capacity_cars > 0 %}
                                 <form action="{% url 'report_available' item.lot.id %}" method="POST" class="flex-fill">
