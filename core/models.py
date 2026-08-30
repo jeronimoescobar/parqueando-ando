@@ -87,8 +87,13 @@ class ParkingLot(models.Model):
 
     @property
     def occupancy_percentage(self):
-        """Porcentaje de ocupación (0-100), redondeado, para FR7."""
-        return round(self.occupancy_ratio * 100)
+        """Porcentaje de ocupación (0-100), redondeado a 1 decimal, para FR7."""
+        return round(self.occupancy_ratio * 100, 1)
+
+    @property
+    def occupancy_percentage_css(self):
+        """Porcentaje formateado siempre con punto para evitar que CSS se rompa (ej. width: 70.1%)."""
+        return str(round(self.occupancy_ratio * 100, 1)).replace(',', '.')
 
     @property
     def has_vehicle_type_breakdown(self):

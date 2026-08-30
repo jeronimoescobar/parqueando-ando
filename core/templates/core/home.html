@@ -115,14 +115,14 @@
                                 <small class="text-muted">{{ item.lot.occupancy_percentage }}%</small>
                             </div>
                             <div class="progress" role="progressbar"
-                                 aria-valuenow="{{ item.lot.occupancy_percentage }}"
+                                 aria-valuenow="{{ item.lot.occupancy_percentage_css }}"
                                  aria-valuemin="0" aria-valuemax="100"
                                  style="height: 8px;">
                                 <div class="progress-bar
                                     {% if item.lot.occupancy_status == 'available' %}bg-success
                                     {% elif item.lot.occupancy_status == 'limited' %}bg-warning
                                     {% else %}bg-danger{% endif %}"
-                                    style="width: {{ item.lot.occupancy_percentage }}%;">
+                                    style="width: {{ item.lot.occupancy_percentage_css }}%;">
                                 </div>
                             </div>
                             <small class="text-muted">
