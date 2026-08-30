@@ -1,6 +1,3 @@
-
-# Parqueando Ando — Base del proyecto (Sprint 1)
-
 Aplicación web colaborativa para consultar y reportar la disponibilidad de
 parqueaderos en el campus de la Universidad EAFIT.
 
@@ -47,14 +44,3 @@ Luego abre `http://127.0.0.1:8000/` en el navegador. La página principal es
 pública; no requiere iniciar sesión. Si deseas crear o editar parqueaderos y
 su disponibilidad, ingresa a `http://127.0.0.1:8000/admin/` con el usuario
 administrador creado en el paso 4.
-
-
-```
-parqueando_ando/   # Configuración del proyecto (settings, urls)
-core/               # App base con la página de bienvenida temporal
-manage.py
-requirements.txt
-```
-
-
-

@@ -13,6 +13,7 @@ Sprint 2 (pendiente):
 from django.shortcuts import get_object_or_404, render
 
 from .models import ParkingLot
+from .parking_recommendation import recommend_parking_lot
 from .transport_links import TRANSPORT_LINKS
 from .waiting_time import estimate_waiting_time
 
@@ -35,8 +36,8 @@ def home(request):
     FR8  – Display parking lot map:
            El template renderiza el mapa Leaflet con los marcadores.
     FR9  – Recommend parking lot:
-           El tiempo de espera sirve de guía para recomendar el parqueadero
-           más conveniente al usuario.
+           El tiempo de espera y la ocupación sirven de guía para recomendar
+           el parqueadero más conveniente al usuario.
     FR10 – Display estimated waiting time:
            Incluye el tiempo estimado de espera por parqueadero usando
            la lógica de `waiting_time.py`.
@@ -44,8 +45,10 @@ def home(request):
            Incluye los enlaces a Uber, DiDi e InDrive cuando el
            parqueadero está lleno.
     """
+    lots = list(ParkingLot.objects.all())
     parking_lots = []
-    for lot in ParkingLot.objects.all():
+    
+    for lot in lots:
         parking_lots.append({
             "lot": lot,
             "waiting_time": estimate_waiting_time(lot),
@@ -54,6 +57,7 @@ def home(request):
     context = {
         "parking_lots": parking_lots,
         "transport_links": TRANSPORT_LINKS,
+        "recommended_lot": recommend_parking_lot(lots) if lots else None,
     }
     return render(request, "core/home.html", context)
 
