@@ -26,10 +26,6 @@ def report_available_space(request, lot_id):
             lot.occupied_motorcycles -= 1
         elif vehicle_type == 'accessibility' and lot.occupied_accessibility > 0:
             lot.occupied_accessibility -= 1
-
-        # Siempre actualizamos el global también para no romper compatibilidad con otras funciones
-        if lot.occupied_spaces > 0:
-            lot.occupied_spaces -= 1
             
         lot.save()
 

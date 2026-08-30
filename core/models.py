@@ -17,7 +17,6 @@ class ParkingLot(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100, unique=True)
     total_capacity = models.PositiveIntegerField()
-    occupied_spaces = models.PositiveIntegerField(default=0)
     last_updated = models.DateTimeField(auto_now=True)
 
     # ── Desglose de capacidad por tipo de vehículo (Weekly 3) ──────────────
@@ -40,6 +39,11 @@ class ParkingLot(models.Model):
     occupied_accessibility = models.PositiveIntegerField(default=0)
 
     # ── Propiedades calculadas ─────────────────────────────────────────────
+    @property
+    def occupied_spaces(self):
+        """Suma total de espacios ocupados calculada dinámicamente."""
+        return self.occupied_cars + self.occupied_motorcycles + self.occupied_accessibility
+
     @property
     def occupancy_ratio(self):
         if self.total_capacity == 0:
