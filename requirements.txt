@@ -1,1 +1,11 @@
-Django==6.0.7
+Django
+Pillow
+requests
+beautifulsoup4
+
+# Opcional: solo necesario para leer el semáforo "Estado de las líneas"
+# del Metro (se pinta con JavaScript en su sitio, así que requiere un
+# navegador headless para leerlo). Si no lo instalas, el resto del sitio
+# (noticias y horarios del Metro) funciona igual.
+# Instalación: pip install playwright && playwright install chromium
+playwright

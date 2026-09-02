@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'reports',
+    'adminpanel',
 ]
 
 MIDDLEWARE = [
@@ -117,3 +118,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files (plano/croquis de cada parqueadero, subido desde /admin/)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Login usado por @staff_member_required en el dashboard de administrador (FR16)
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+#
+# Silencia el warning (models.W042) de core.ParkingLot, core.ParkingSpot y
+# reports.ParkingReport. El id de esos modelos ya es BigAutoField en la
+# base de datos (ver core/migrations/0007_alter_parkinglot_id_alter_parkingspot_id),
+# esto solo declara ese mismo tipo como default para cualquier modelo
+# nuevo que no especifique su propio primary_key.
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

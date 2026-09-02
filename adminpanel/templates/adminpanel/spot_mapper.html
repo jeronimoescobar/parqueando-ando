@@ -1,0 +1,367 @@
+{% load l10n %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubicar espacios · {{ lot.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #lot-plan {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            user-select: none;
+            cursor: crosshair;
+        }
+        #lot-plan img {
+            width: 100%;
+            display: block;
+            border-radius: 12px;
+            pointer-events: none; /* los clics los captura el contenedor, no la imagen */
+        }
+
+        /* Casilla tipo "parqueadero": rectángulo con líneas punteadas.
+           Mismo estilo visual que ve el usuario final en el sitio público,
+           para que lo que montas aquí se vea igual allá. */
+        .spot-marker {
+            position: absolute;
+            transform: translate(-50%, -50%) rotate(var(--spot-rotation, 0deg));
+            border-radius: 3px;
+            border: 2px dashed #9ec5fe; /* azul clarito */
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            padding: 0;
+            line-height: 1;
+            background-color: #0d6efd;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .spot-marker:hover {
+            border-color: #0a58ca; /* azul oscuro al pasar el cursor */
+            box-shadow: 0 0 0 3px rgba(10, 88, 202, 0.25);
+            z-index: 5;
+        }
+        .spot-marker.dragging { cursor: grabbing; opacity: 0.85; }
+
+        .spot-delete {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            line-height: 14px;
+            font-size: 10px;
+            border-radius: 50%;
+            background: #dc3545;
+            color: #fff;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #fff;
+        }
+
+        #new-spot-form, #edit-spot-form {
+            position: absolute;
+            transform: translate(-50%, 10px);
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.2);
+            padding: 10px;
+            width: 230px;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">📍 Ubicar espacios — {{ lot.name }}</span>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm">&larr; Volver al dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="alert alert-info small">
+            <strong>Cómo usarlo:</strong> haz clic sobre una zona vacía del plano para crear un espacio ahí
+            (te pedirá la etiqueta, ej. "A1"). Arrastra un espacio existente para reubicarlo.
+            Haz <strong>clic simple</strong> (sin arrastrar) sobre un espacio existente para
+            <strong>girarlo 90°</strong> o cambiar su tamaño. Para borrarlo, haz clic en la ⊗ roja de su esquina.
+        </div>
+
+        {% if not lot.layout_image %}
+        <div class="alert alert-warning">
+            Este parqueadero todavía no tiene una imagen de plano cargada.
+            <a href="{% url 'admin:core_parkinglot_change' lot.id %}">Súbela primero desde aquí</a>.
+        </div>
+        {% else %}
+
+        <div id="lot-plan" class="mb-3">
+            <img src="{{ lot.layout_image.url }}" alt="Plano de {{ lot.name }}" id="plan-img">
+
+            {% for spot in spots %}
+            <div class="spot-marker" data-spot-id="{{ spot.id }}" data-label="{{ spot.label }}"
+                 data-rotation="{{ spot.rotation }}" data-width="{{ spot.width }}" data-height="{{ spot.height }}"
+                 style="left: {{ spot.pos_x|unlocalize }}%; top: {{ spot.pos_y|unlocalize }}%;
+                        width: {{ spot.width }}px; height: {{ spot.height }}px;
+                        --spot-rotation: {{ spot.rotation }}deg;">
+                {{ spot.label }}
+                <span class="spot-delete" data-spot-id="{{ spot.id }}">✕</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <p class="text-muted small">Espacios ubicados: <span id="spot-count">{{ spots|length }}</span></p>
+        {% endif %}
+    </div>
+
+    <form id="csrf-holder" style="display:none;">{% csrf_token %}</form>
+
+    <script>
+        const csrftoken = document.querySelector('#csrf-holder [name=csrfmiddlewaretoken]').value;
+        const lotSlug = "{{ lot.slug }}";
+        const plan = document.getElementById('lot-plan');
+        const countEl = document.getElementById('spot-count');
+
+        function updateCount() {
+            if (countEl) countEl.textContent = plan.querySelectorAll('.spot-marker').length;
+        }
+
+        async function apiPost(url, params) {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(params).toString(),
+            });
+            return resp.json();
+        }
+
+        function closeNewSpotForm() {
+            const existing = document.getElementById('new-spot-form');
+            if (existing) existing.remove();
+        }
+
+        function closeEditPanel() {
+            const existing = document.getElementById('edit-spot-form');
+            if (existing) existing.remove();
+        }
+
+        function openEditPanel(marker) {
+            closeNewSpotForm();
+            closeEditPanel();
+
+            const spotId = marker.dataset.spotId;
+            const currentWidth = parseInt(marker.dataset.width || '42', 10);
+            const currentHeight = parseInt(marker.dataset.height || '26', 10);
+
+            const form = document.createElement('div');
+            form.id = 'edit-spot-form';
+            form.style.left = marker.style.left;
+            form.style.top = marker.style.top;
+            form.innerHTML = `
+                <p class="small fw-bold mb-2">Espacio ${marker.dataset.label}</p>
+                <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-2" id="edit-spot-rotate">
+                    ⟳ Girar 90°
+                </button>
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Ancho (px)</label>
+                        <input type="number" class="form-control form-control-sm" id="edit-spot-width" min="10" max="300" value="${currentWidth}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Alto (px)</label>
+                        <input type="number" class="form-control form-control-sm" id="edit-spot-height" min="10" max="300" value="${currentHeight}">
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mb-2">
+                    <button class="btn btn-sm btn-primary flex-fill" id="edit-spot-save-size">Guardar tamaño</button>
+                    <button class="btn btn-sm btn-outline-secondary flex-fill" id="edit-spot-close">Cerrar</button>
+                </div>
+            `;
+            plan.appendChild(form);
+
+            document.getElementById('edit-spot-rotate').addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                const newRotation = (parseInt(marker.dataset.rotation || '0', 10) + 90) % 360;
+                const data = await apiPost(`/dashboard/mapper/${lotSlug}/spots/${spotId}/update/`, {
+                    rotation: newRotation,
+                });
+                if (data.ok) {
+                    marker.dataset.rotation = data.rotation;
+                    marker.style.setProperty('--spot-rotation', `${data.rotation}deg`);
+                }
+            });
+
+            document.getElementById('edit-spot-save-size').addEventListener('click', async (ev) => {
+                ev.stopPropagation();
+                const width = document.getElementById('edit-spot-width').value;
+                const height = document.getElementById('edit-spot-height').value;
+                const data = await apiPost(`/dashboard/mapper/${lotSlug}/spots/${spotId}/update/`, {
+                    width, height,
+                });
+                if (data.ok) {
+                    marker.dataset.width = data.width;
+                    marker.dataset.height = data.height;
+                    marker.style.width = `${data.width}px`;
+                    marker.style.height = `${data.height}px`;
+                }
+                closeEditPanel();
+            });
+
+            document.getElementById('edit-spot-close').addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                closeEditPanel();
+            });
+        }
+
+        function makeMarkerDraggable(marker) {
+            let dragging = false;
+            let moved = false;
+            let startX = 0;
+            let startY = 0;
+
+            marker.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('spot-delete')) return;
+                dragging = true;
+                moved = false;
+                startX = e.clientX;
+                startY = e.clientY;
+                marker.classList.add('dragging');
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!dragging) return;
+                if (Math.abs(e.clientX - startX) > 3 || Math.abs(e.clientY - startY) > 3) {
+                    moved = true;
+                }
+                const rect = plan.getBoundingClientRect();
+                let x = ((e.clientX - rect.left) / rect.width) * 100;
+                let y = ((e.clientY - rect.top) / rect.height) * 100;
+                x = Math.min(100, Math.max(0, x));
+                y = Math.min(100, Math.max(0, y));
+                marker.style.left = x + '%';
+                marker.style.top = y + '%';
+            });
+
+            document.addEventListener('mouseup', async () => {
+                if (!dragging) return;
+                dragging = false;
+                marker.classList.remove('dragging');
+                const spotId = marker.dataset.spotId;
+
+                if (moved) {
+                    const x = parseFloat(marker.style.left);
+                    const y = parseFloat(marker.style.top);
+                    await apiPost(`/dashboard/mapper/${lotSlug}/spots/${spotId}/update/`, {
+                        pos_x: x.toFixed(2), pos_y: y.toFixed(2),
+                    });
+                } else {
+                    openEditPanel(marker);
+                }
+            });
+
+            const deleteBtn = marker.querySelector('.spot-delete');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (!confirm(`¿Borrar el espacio "${marker.dataset.label}"?`)) return;
+                    const spotId = marker.dataset.spotId;
+                    const data = await apiPost(`/dashboard/mapper/${lotSlug}/spots/${spotId}/delete/`, {});
+                    if (data.ok) {
+                        marker.remove();
+                        updateCount();
+                        closeEditPanel();
+                    }
+                });
+            }
+        }
+
+        plan.querySelectorAll('.spot-marker').forEach(makeMarkerDraggable);
+
+        if (plan) {
+            plan.addEventListener('click', (e) => {
+                if (e.target.closest('.spot-marker')) return; // no crear encima de uno existente
+                if (e.target.closest('#new-spot-form') || e.target.closest('#edit-spot-form')) return;
+                closeNewSpotForm();
+                closeEditPanel();
+
+                const rect = plan.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+                const form = document.createElement('div');
+                form.id = 'new-spot-form';
+                form.style.left = x + '%';
+                form.style.top = y + '%';
+                form.innerHTML = `
+                    <div class="mb-2">
+                        <label class="form-label small mb-1">Etiqueta (ej: A1)</label>
+                        <input type="text" class="form-control form-control-sm" id="new-spot-label" autofocus>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1">Tipo</label>
+                        <select class="form-select form-select-sm" id="new-spot-type">
+                            <option value="car">🚗 Carro</option>
+                            <option value="motorcycle">🏍️ Moto</option>
+                            <option value="accessibility">♿ PMR</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-primary flex-fill" id="new-spot-save">Guardar</button>
+                        <button class="btn btn-sm btn-outline-secondary flex-fill" id="new-spot-cancel">Cancelar</button>
+                    </div>
+                `;
+                plan.appendChild(form);
+                document.getElementById('new-spot-label').focus();
+
+                document.getElementById('new-spot-cancel').addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    closeNewSpotForm();
+                });
+
+                document.getElementById('new-spot-save').addEventListener('click', async (ev) => {
+                    ev.stopPropagation();
+                    const label = document.getElementById('new-spot-label').value.trim();
+                    const vehicleType = document.getElementById('new-spot-type').value;
+                    if (!label) { alert('Escribe una etiqueta para el espacio.'); return; }
+
+                    const data = await apiPost(`/dashboard/mapper/${lotSlug}/create/`, {
+                        label, vehicle_type: vehicleType,
+                        pos_x: x.toFixed(2), pos_y: y.toFixed(2),
+                    });
+
+                    if (!data.ok) { alert(data.error || 'No se pudo crear el espacio.'); return; }
+
+                    const marker = document.createElement('div');
+                    marker.className = 'spot-marker';
+                    marker.dataset.spotId = data.id;
+                    marker.dataset.label = data.label;
+                    marker.dataset.rotation = data.rotation;
+                    marker.dataset.width = data.width;
+                    marker.dataset.height = data.height;
+                    marker.style.left = data.pos_x + '%';
+                    marker.style.top = data.pos_y + '%';
+                    marker.style.width = data.width + 'px';
+                    marker.style.height = data.height + 'px';
+                    marker.style.setProperty('--spot-rotation', `${data.rotation}deg`);
+                    marker.innerHTML = `${data.label}<span class="spot-delete" data-spot-id="${data.id}">✕</span>`;
+                    plan.appendChild(marker);
+                    makeMarkerDraggable(marker);
+                    updateCount();
+                    closeNewSpotForm();
+                });
+            });
+        }
+    </script>
+</body>
+</html>

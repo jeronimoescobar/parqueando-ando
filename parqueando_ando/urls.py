@@ -14,11 +14,22 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Login/logout para el administrador (usados por FR16 - dashboard)
+    path('accounts/', include('django.contrib.auth.urls')),
     path('', include('core.urls')),
     path('reports/', include('reports.urls')),
+    # Dashboard + mapeador visual de espacios (toda la funcionalidad de
+    # administrador agrupada en la app `adminpanel`).
+    path('dashboard/', include('adminpanel.urls')),
 ]
+
+if settings.DEBUG:
+    # Sirve las imágenes de los planos (layout_image) en desarrollo.
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
