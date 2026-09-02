@@ -1,4 +1,3 @@
-{% load l10n %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -17,79 +16,6 @@
             z-index: 1;
             overflow: hidden;
             border: 1px solid #dee2e6;
-        }
-
-        /* ============================================================
-           Cada parqueadero: tarjeta de ancho completo, esquinas
-           redondeadas, con toda su info siempre visible. Solo el plano
-           interactivo se despliega/oculta (botón "Ver plano").
-           ============================================================ */
-        .lot-card {
-            border-radius: 1rem;
-        }
-
-        /* El plano se centra según su tamaño real (no se estira a la
-           fuerza): el contenedor es inline-block dentro de un bloque
-           centrado, y la imagen nunca supera su tamaño natural. */
-        .lot-plan-wrap {
-            text-align: center;
-        }
-        .lot-plan-instance {
-            position: relative;
-            display: inline-block;
-            max-width: 100%;
-            user-select: none;
-        }
-        .lot-plan-instance img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            border-radius: 10px;
-        }
-
-        /* Casilla tipo "parqueadero": rectángulo con líneas punteadas.
-           El tamaño (width/height) y la rotación se fijan por casilla desde
-           /admin/ o el mapeador visual (ParkingSpot.rotation/width/height)
-           vía variables/estilo en línea — ver --spot-rotation más abajo. */
-        .spot-marker {
-            position: absolute;
-            transform: translate(-50%, -50%) rotate(var(--spot-rotation, 0deg));
-            border-radius: 3px;
-            border: 2px dashed #9ec5fe; /* azul clarito */
-            font-size: 0.62rem;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            padding: 0;
-            line-height: 1;
-            transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        .spot-marker:hover {
-            border-color: #0a58ca; /* azul oscuro al pasar el cursor */
-            transform: translate(-50%, -50%) rotate(var(--spot-rotation, 0deg)) scale(1.12);
-            box-shadow: 0 0 0 3px rgba(10, 88, 202, 0.25);
-            z-index: 5;
-        }
-        .spot-empty    { background-color: #198754; }
-        .spot-occupied { background-color: #dc3545; }
-        .spot-unknown  { background-color: #6c757d; }
-
-        .legend-swatch {
-            display: inline-block;
-            width: 16px; height: 16px;
-            border-radius: 3px;
-            border: 2px dashed #9ec5fe;
-            vertical-align: middle;
-        }
-
-        /* ============================================================
-           Estado del Metro (scraping cacheado, ver /metro-status/)
-           ============================================================ */
-        .metro-updated-badge {
-            font-size: 0.75rem;
         }
     </style>
 </head>
@@ -115,12 +41,9 @@
     <!-- ================================================================
      REQUERIMIENTO FR8: Mostrar mapa del estacionamiento
      Muestra la ubicación de los cuatro parqueaderos de EAFIT.
-     Este mapa general es solo de ubicación: el plano interactivo por
-     espacio se abre desde el acordeón de cada parqueadero más abajo, no
-     desde aquí, para no estorbarle a este mapa.
      ================================================================ -->
-    <div class="container mb-5">
-        <h2 class="h4 mb-3">Mapa de estacionamientos EAFIT</h2>
+<div class="container mb-5">
+    <h2 class="h4 mb-3">Mapa de estacionamientos EAFIT</h2>
 
         <p class="text-muted">
             Consulta la ubicación de los parqueaderos disponibles en el campus.
@@ -154,187 +77,155 @@
 
     <!-- ================================================================
          REQUERIMIENTO FR5 & FR6: Listado de parqueaderos y estado de ocupación
-         Cada parqueadero es una tarjeta de ancho completo, de esquinas
-         redondeadas, con toda su información SIEMPRE visible (ocupación,
-         capacidad, botones de reporte). Solo el plano interactivo se
-         despliega/oculta con un botón, centrado según su tamaño real.
+         Cada tarjeta muestra la ocupación reportada, celdas disponibles, el estado
+         (Disponible / Limitado / Lleno), mensaje explícito cuando está lleno
+         y el tiempo estimado de espera (FR10).
          ================================================================ -->
     <div class="container mb-5">
         <h2 class="h4 mb-3">Disponibilidad de parqueaderos</h2>
 
         {% if parking_lots %}
-        {% for item in parking_lots %}
-        <div class="card lot-card shadow-sm mb-3 {% if item.lot.occupancy_status == 'full' %}border-danger{% endif %}">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                    <h3 class="h5 mb-0">{{ item.lot.name }}</h3>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge
-                            {% if item.lot.occupancy_status == 'available' %}bg-success
-                            {% elif item.lot.occupancy_status == 'limited' %}bg-warning text-dark
-                            {% else %}bg-danger{% endif %}">
-                            {{ item.lot.occupancy_status_display }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- ====================================================
-                     REQUERIMIENTO FR7: Mostrar estado de ocupación (detalle)
-                     Barra de progreso con el porcentaje exacto de ocupación
-                     y el conteo de celdas ocupadas/disponibles.
-                     ==================================================== -->
-                <div class="mb-3" aria-label="Estado de ocupación">
-                    <div class="d-flex justify-content-between">
-                        <small class="text-muted">Ocupación</small>
-                        <small class="text-muted">{{ item.lot.occupancy_percentage }}%</small>
-                    </div>
-                    <div class="progress" role="progressbar"
-                         aria-valuenow="{{ item.lot.occupancy_percentage_css }}"
-                         aria-valuemin="0" aria-valuemax="100"
-                         style="height: 8px;">
-                        <div class="progress-bar
-                            {% if item.lot.occupancy_status == 'available' %}bg-success
-                            {% elif item.lot.occupancy_status == 'limited' %}bg-warning
-                            {% else %}bg-danger{% endif %}"
-                            style="width: {{ item.lot.occupancy_percentage_css|unlocalize }}%;">
+        <div class="row g-3">
+            {% for item in parking_lots %}
+            <div class="col-12 col-md-4">
+                <div class="card h-100 shadow-sm {% if item.lot.occupancy_status == 'full' %}border-danger{% endif %}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="h5 card-title mb-0">
+                                <a href="{% url 'parking_detail' item.lot.slug %}" class="text-decoration-none text-dark">
+                                    {{ item.lot.name }}
+                                </a>
+                            </h3>
+                            <span class="badge 
+                                {% if item.lot.occupancy_status == 'available' %}bg-success
+                                {% elif item.lot.occupancy_status == 'limited' %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ item.lot.occupancy_status_display }}
+                            </span>
                         </div>
-                    </div>
-                    <small class="text-muted">
-                        {{ item.lot.occupied_spaces }} ocupadas · {{ item.lot.available_spaces }} disponibles
-                        de {{ item.lot.total_capacity }} celdas
-                    </small>
-                </div>
 
-                {% if item.lot.has_vehicle_type_breakdown %}
-                <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Distribución de cupos">
-                    <span class="badge text-bg-primary">🚗 Carros: {{ item.lot.available_cars }}/{{ item.lot.capacity_cars }}</span>
-                    <span class="badge text-bg-secondary">🏍️ Motos: {{ item.lot.available_motorcycles }}/{{ item.lot.capacity_motorcycles }}</span>
-                    <span class="badge text-bg-info">♿ PMR: {{ item.lot.available_accessibility }}/{{ item.lot.capacity_accessibility }}</span>
-                </div>
-                {% endif %}
+                        <p class="card-text mb-2 text-muted">
+                            <small class="text-secondary">Capacidad total: <strong>{{ item.lot.total_capacity }} celdas</strong></small>
+                        </p>
 
-                <div class="mb-2">
-                    <small class="text-muted">Espera estimada:</small>
-                    <span class="badge
-                        {% if item.waiting_time.level == 'low' %}bg-success
-                        {% elif item.waiting_time.level == 'medium' %}bg-warning text-dark
-                        {% else %}bg-danger{% endif %}">
-                        {{ item.waiting_time.label }}
-                    </span>
-                </div>
-
-                {% if item.lot.occupancy_status == 'full' %}
-                <div class="alert alert-danger py-2 px-3 mt-3 text-center fw-bold small" role="alert">
-                    ⚠️ ¡PARQUEADERO LLENO! No hay celdas disponibles.
-                </div>
-                {% endif %}
-
-                <div class="mt-3 pt-3 border-top">
-                    <small class="text-muted d-block mb-2 text-center">👇 Acabo de llegar (Ocupar espacio):</small>
-                    <div class="d-flex gap-2 justify-content-center mb-3">
-                        {% if item.lot.capacity_cars > 0 %}
-                        <form action="{% url 'report_occupied' item.lot.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="vehicle_type" value="car">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">🚗 Carro</button>
-                        </form>
-                        {% endif %}
-
-                        {% if item.lot.capacity_motorcycles > 0 %}
-                        <form action="{% url 'report_occupied' item.lot.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="vehicle_type" value="motorcycle">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">🏍️ Moto</button>
-                        </form>
-                        {% endif %}
-
-                        {% if item.lot.capacity_accessibility > 0 %}
-                        <form action="{% url 'report_occupied' item.lot.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="vehicle_type" value="accessibility">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">♿ PMR</button>
-                        </form>
-                        {% endif %}
-                    </div>
-
-                    <!-- FR21: Liberar espacio -->
-                    <small class="text-muted d-block mb-2 text-center">👋 Me voy (Liberar espacio):</small>
-                    <div class="d-flex gap-2 justify-content-center">
-                        {% if item.lot.capacity_cars > 0 %}
-                        <form action="{% url 'report_available' item.lot.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="vehicle_type" value="car">
-                            <button type="submit" class="btn btn-sm btn-outline-success">🚗 Carro</button>
-                        </form>
-                        {% endif %}
-
-                        {% if item.lot.capacity_motorcycles > 0 %}
-                        <form action="{% url 'report_available' item.lot.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="vehicle_type" value="motorcycle">
-                            <button type="submit" class="btn btn-sm btn-outline-success">🏍️ Moto</button>
-                        </form>
-                        {% endif %}
-
-                        {% if item.lot.capacity_accessibility > 0 %}
-                        <form action="{% url 'report_available' item.lot.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="vehicle_type" value="accessibility">
-                            <button type="submit" class="btn btn-sm btn-outline-success">♿ PMR</button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- ============================================================
-                     Plano interactivo del parqueadero: es lo ÚNICO que se
-                     despliega/oculta en esta tarjeta. Se centra según su
-                     tamaño real (no se estira a un ancho fijo).
-                     ============================================================ -->
-                {% if item.lot.layout_image %}
-                <div class="mt-3 pt-3 border-top text-center">
-                    <button type="button" class="btn btn-sm btn-primary toggle-plan-btn"
-                            data-bs-toggle="collapse" data-bs-target="#plan-{{ item.lot.slug }}"
-                            aria-expanded="false" aria-controls="plan-{{ item.lot.slug }}">
-                        📍 Ver plano del parqueadero ⌄
-                    </button>
-
-                    <div class="collapse mt-3" id="plan-{{ item.lot.slug }}">
-                        <p class="text-muted small mb-2">Toca un espacio para reportar su estado:</p>
-                        <div class="d-flex gap-3 mb-3 small justify-content-center">
-                            <span><span class="legend-swatch spot-empty"></span> Vacío</span>
-                            <span><span class="legend-swatch spot-occupied"></span> Ocupado</span>
-                            <span><span class="legend-swatch spot-unknown"></span> No se sabe</span>
+                        <!-- ========================================================
+                             REQUERIMIENTO FR7: Mostrar estado de ocupación (detalle)
+                             Barra de progreso con el porcentaje exacto de ocupación
+                             y el conteo de celdas ocupadas/disponibles.
+                             ======================================================== -->
+                        <div class="mb-3" aria-label="Estado de ocupación">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Ocupación</small>
+                                <small class="text-muted">{{ item.lot.occupancy_percentage }}%</small>
+                            </div>
+                            <div class="progress" role="progressbar"
+                                 aria-valuenow="{{ item.lot.occupancy_percentage_css }}"
+                                 aria-valuemin="0" aria-valuemax="100"
+                                 style="height: 8px;">
+                                <div class="progress-bar
+                                    {% if item.lot.occupancy_status == 'available' %}bg-success
+                                    {% elif item.lot.occupancy_status == 'limited' %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                    style="width: {{ item.lot.occupancy_percentage_css }}%;">
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {{ item.lot.occupied_spaces }} ocupadas · {{ item.lot.available_spaces }} disponibles
+                            </small>
                         </div>
-                        <div class="lot-plan-wrap">
-                            <div class="lot-plan-instance" data-lot-slug="{{ item.lot.slug }}">
-                                <img src="{{ item.lot.layout_image.url }}" alt="Plano de {{ item.lot.name }}">
-                                {% for spot in item.spots %}
-                                <button type="button"
-                                        class="spot-marker spot-{{ spot.display_status }}"
-                                        style="left: {{ spot.pos_x|unlocalize }}%; top: {{ spot.pos_y|unlocalize }}%; width: {{ spot.width }}px; height: {{ spot.height }}px; --spot-rotation: {{ spot.rotation }}deg;"
-                                        data-spot-id="{{ spot.id }}"
-                                        data-label="{{ spot.label }}"
-                                        title="{{ spot.label }} — {{ spot.get_status_display }}">
-                                    {{ spot.label }}
-                                </button>
-                                {% endfor %}
+
+                        {% if item.lot.has_vehicle_type_breakdown %}
+                        <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Distribución de cupos">
+                            <span class="badge text-bg-primary">🚗 Carros: {{ item.lot.available_cars }}/{{ item.lot.capacity_cars }}</span>
+                            <span class="badge text-bg-secondary">🏍️ Motos: {{ item.lot.available_motorcycles }}/{{ item.lot.capacity_motorcycles }}</span>
+                            <span class="badge text-bg-info">♿ PMR: {{ item.lot.available_accessibility }}/{{ item.lot.capacity_accessibility }}</span>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">Espera estimada:</small>
+                                <span class="badge 
+                                    {% if item.waiting_time.level == 'low' %}bg-success
+                                    {% elif item.waiting_time.level == 'medium' %}bg-warning text-dark
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ item.waiting_time.label }}
+                                </span>
+                            </div>
+                            <a href="{% url 'parking_detail' item.lot.slug %}" class="btn btn-sm btn-outline-secondary">
+                                Ver detalle →
+                            </a>
+                        </div>
+
+                        {% if item.lot.occupancy_status == 'full' %}
+                        <div class="alert alert-danger py-2 px-3 mt-3 mb-0 text-center fw-bold small" role="alert">
+                            ⚠️ ¡PARQUEADERO LLENO! No hay celdas disponibles.
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-3 border-top pt-3">
+                            <!-- FR22: Ocupar espacio -->
+                            <small class="text-muted d-block mb-2 text-center">👇 Acabo de llegar (Ocupar espacio):</small>
+                            <div class="d-flex gap-2 justify-content-center mb-3">
+                                {% if item.lot.capacity_cars > 0 %}
+                                <form action="{% url 'report_occupied' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="car">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">🚗 Carro</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if item.lot.capacity_motorcycles > 0 %}
+                                <form action="{% url 'report_occupied' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="motorcycle">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">🏍️ Moto</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if item.lot.capacity_accessibility > 0 %}
+                                <form action="{% url 'report_occupied' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="accessibility">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">♿ PMR</button>
+                                </form>
+                                {% endif %}
+                            </div>
+
+                            <!-- FR21: Liberar espacio -->
+                            <small class="text-muted d-block mb-2 text-center">👋 Me voy (Liberar espacio):</small>
+                            <div class="d-flex gap-2 justify-content-center">
+                                {% if item.lot.capacity_cars > 0 %}
+                                <form action="{% url 'report_available' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="car">
+                                    <button type="submit" class="btn btn-sm btn-outline-success w-100">🚗 Carro</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if item.lot.capacity_motorcycles > 0 %}
+                                <form action="{% url 'report_available' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="motorcycle">
+                                    <button type="submit" class="btn btn-sm btn-outline-success w-100">🏍️ Moto</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if item.lot.capacity_accessibility > 0 %}
+                                <form action="{% url 'report_available' item.lot.id %}" method="POST" class="flex-fill">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="vehicle_type" value="accessibility">
+                                    <button type="submit" class="btn btn-sm btn-outline-success w-100">♿ PMR</button>
+                                </form>
+                                {% endif %}
                             </div>
                         </div>
-                        {% if not item.spots %}
-                        <p class="text-muted small mt-2 mb-0">Todavía no hay espacios ubicados en este plano.</p>
-                        {% endif %}
+
                     </div>
                 </div>
-                {% else %}
-                <div class="mt-3 pt-3 border-top text-muted small text-center">
-                    Este parqueadero todavía no tiene un plano cargado.
-                </div>
-                {% endif %}
-
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
 
         {% else %}
         <p class="text-muted">
@@ -345,7 +236,7 @@
 
 
     <!-- ================================================================
-         REQUERIMIENTO FR37: Enlaces a apps de transporte externo
+         REQUERIMIENTO FR37 Nicolas M: Enlaces a apps de transporte externo
          La lista de botones sale de core/transport_links.py; para agregar
          o quitar un servicio no hace falta tocar este template.
          ================================================================ -->
@@ -353,7 +244,7 @@
         <h2 class="h4 mb-3">¿El parqueadero esta lleno? Considera estas opciones:</h2>
         <p class="subtitle">Viaja a EAFIT sin preocuparte por el parqueadero. Elige tu servicio de transporte preferido y llega al campus de forma rapido y sencilla.
         </p>
-        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+        <div class="d-flex flex-wrap justify-content-center gap-2">
             {% for link in transport_links %}
             <a href="{{ link.url }}"
                class="btn btn-outline-primary"
@@ -363,77 +254,11 @@
             </a>
             {% endfor %}
         </div>
-
-        <!-- ============================================================
-             Estado del Metro de Medellín (scraping de metrodemedellin.gov.co,
-             ver core/metro_status.py). Se refresca cada 5 minutos con fetch;
-             el scraping real ocurre como máximo cada 10 minutos (caché del
-             servidor), y se muestra hace cuánto se actualizó.
-             ============================================================ -->
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                    <h3 class="h6 mb-0">🚇 Estado y horarios del Metro de Medellín</h3>
-                    <span class="badge text-bg-light text-muted metro-updated-badge" id="metro-updated-badge">
-                        Actualizando...
-                    </span>
-                </div>
-                <p class="text-muted small">
-                    Si el parqueadero está lleno, revisa si el Metro tiene alguna falla antes de salir.
-                    Esta información se toma directamente de
-                    <a href="https://www.metrodemedellin.gov.co" target="_blank" rel="noopener noreferrer">metrodemedellin.gov.co</a>.
-                </p>
-
-                <div id="metro-error" class="alert alert-warning small py-2 px-3 d-none"></div>
-
-                <div class="mb-3">
-                    <h4 class="h6">🚦 Estado de las líneas</h4>
-                    <div id="metro-line-status" class="d-flex flex-wrap gap-2">
-                        <span class="text-muted small">Cargando estado en vivo...</span>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <h4 class="h6">📰 Últimas noticias / avisos de servicio</h4>
-                        <ul class="list-group list-group-flush" id="metro-news-list">
-                            <li class="list-group-item text-muted small">Cargando noticias...</li>
-                        </ul>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <h4 class="h6">🕐 Horarios de operación</h4>
-                        <ul class="list-group list-group-flush" id="metro-schedules-list">
-                            <li class="list-group-item text-muted small">Cargando horarios...</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-
-    <!-- Modal compartido para reportar el estado de un espacio -->
-    <div class="modal fade" id="spotModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="spotModalLabel">Espacio</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body d-flex flex-column gap-2">
-                    <p class="text-muted small mb-1">¿Cómo está este espacio ahora mismo?</p>
-                    <button type="button" class="btn btn-success spot-status-btn" data-status="empty">🟢 Vacío</button>
-                    <button type="button" class="btn btn-danger spot-status-btn" data-status="occupied">🔴 Ocupado</button>
-                    <button type="button" class="btn btn-secondary spot-status-btn" data-status="unknown">⚪ No sé</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <form id="csrf-holder" style="display:none;">{% csrf_token %}</form>
-
-    <!-- Bootstrap JS (necesario para el acordeón, cerrar alertas y el modal) -->
+    
+    <!-- Bootstrap JS (necesario para cerrar alertas) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <!-- Leaflet JS -->
 <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -442,9 +267,8 @@
 
 <script>
     // ================================================================
-    // FR8 - Mapa general de estacionamientos (solo ubicación).
-    // El plano interactivo por espacio se abre desde el acordeón, no
-    // desde aquí — por eso los popups solo muestran el nombre.
+    // FR8 - Mapa de estacionamientos
+    // Ubicaciones definidas para el proyecto Parqueando-Ando.
     // ================================================================
 
     const parkingMap = L.map("parking-map").setView(
@@ -496,180 +320,8 @@
         -75.57792203235827
     ])
     .addTo(parkingMap)
+
     .bindPopup("<strong>Parqueadero de Empleados</strong>");
-
-    // Cambia el texto del botón "Ver plano" al abrir/cerrar cada plano
-    // (ya no hay un acordeón general — cada tarjeta es independiente).
-    document.querySelectorAll('.toggle-plan-btn').forEach((btn) => {
-        const targetSel = btn.getAttribute('data-bs-target');
-        const target = document.querySelector(targetSel);
-        if (!target) return;
-        target.addEventListener('shown.bs.collapse', () => {
-            btn.textContent = '📍 Ocultar plano ⌃';
-        });
-        target.addEventListener('hidden.bs.collapse', () => {
-            btn.textContent = '📍 Ver plano del parqueadero ⌄';
-        });
-    });
-</script>
-
-<script>
-    // ================================================================
-    // Plano interactivo por parqueadero (Sprint 2): vive dentro del
-    // acordeón de cada parqueadero. Reporta el estado de un espacio con
-    // el modal compartido. Reutiliza /parking/<slug>/spots/<id>/status/.
-    // ================================================================
-    const csrftoken = document.querySelector('#csrf-holder [name=csrfmiddlewaretoken]').value;
-
-    let currentSpotId = null;
-    let currentLotSlug = null;
-    const spotModal = new bootstrap.Modal(document.getElementById('spotModal'));
-
-    document.querySelectorAll('.spot-marker[data-spot-id]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            currentSpotId = btn.dataset.spotId;
-            currentLotSlug = btn.closest('.lot-plan-instance').dataset.lotSlug;
-            document.getElementById('spotModalLabel').textContent = `Espacio ${btn.dataset.label}`;
-            spotModal.show();
-        });
-    });
-
-    document.querySelectorAll('.spot-status-btn').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-            if (!currentSpotId || !currentLotSlug) return;
-            const status = btn.dataset.status;
-            try {
-                const resp = await fetch(`/parking/${currentLotSlug}/spots/${currentSpotId}/status/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `status=${status}`,
-                });
-                const data = await resp.json();
-                if (data.ok) {
-                    const marker = document.querySelector(
-                        `.lot-plan-instance[data-lot-slug="${currentLotSlug}"] .spot-marker[data-spot-id="${data.spot_id}"]`
-                    );
-                    if (marker) {
-                        marker.classList.remove('spot-empty', 'spot-occupied', 'spot-unknown');
-                        marker.classList.add(`spot-${data.status}`);
-                        marker.title = `${marker.dataset.label} — ${data.status_display}`;
-                    }
-                }
-            } catch (e) {
-                console.error('No se pudo actualizar el espacio', e);
-            } finally {
-                spotModal.hide();
-            }
-        });
-    });
-</script>
-
-<script>
-    // ================================================================
-    // Estado del Metro (scraping cacheado del servidor, ver
-    // core/metro_status.py). Refresca cada 5 minutos con fetch; el
-    // texto "hace X min" se recalcula cada 30s sin volver a pedir datos.
-    // ================================================================
-    let metroFetchedAt = null;
-
-    function renderMetroUpdatedBadge() {
-        const badge = document.getElementById('metro-updated-badge');
-        if (!metroFetchedAt) { badge.textContent = 'Sin datos'; return; }
-        const minutes = Math.max(0, Math.round((Date.now() - metroFetchedAt.getTime()) / 60000));
-        badge.textContent = minutes <= 0 ? 'Actualizado hace instantes' : `Actualizado hace ${minutes} min`;
-    }
-
-    function renderMetroLineStatus(lineStatus) {
-        const el = document.getElementById('metro-line-status');
-        el.innerHTML = '';
-        if (!lineStatus || lineStatus.length === 0) {
-            el.innerHTML = '<span class="text-muted small">Estado en vivo no disponible en este momento. Revisa las noticias abajo.</span>';
-            return;
-        }
-        lineStatus.forEach((item) => {
-            const statusLower = (item.status || '').toLowerCase();
-            let badgeClass = 'text-bg-secondary';
-            if (statusLower.includes('normal')) badgeClass = 'text-bg-success';
-            else if (statusLower.includes('restring')) badgeClass = 'text-bg-warning text-dark';
-            else if (statusLower.includes('sin operaci')) badgeClass = 'text-bg-danger';
-
-            const span = document.createElement('span');
-            span.className = `badge ${badgeClass}`;
-            span.textContent = `${item.line}: ${item.status}`;
-            el.appendChild(span);
-        });
-    }
-
-    function renderMetroNews(newsList) {
-        const el = document.getElementById('metro-news-list');
-        el.innerHTML = '';
-        if (!newsList || newsList.length === 0) {
-            el.innerHTML = '<li class="list-group-item text-muted small">No hay noticias recientes.</li>';
-            return;
-        }
-        newsList.forEach((item) => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item small';
-            li.innerHTML = `<a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.title}</a>`;
-            el.appendChild(li);
-        });
-    }
-
-    function renderMetroSchedules(schedules) {
-        const el = document.getElementById('metro-schedules-list');
-        el.innerHTML = '';
-        if (!schedules || schedules.length === 0) {
-            el.innerHTML = '<li class="list-group-item text-muted small">No se encontraron horarios.</li>';
-            return;
-        }
-        schedules.forEach((s) => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item small';
-            // Cada horario ya viene aclarado con categoría/día/líneas desde
-            // el servidor (ver core/metro_status.py: _scrape_schedules).
-            const parts = [];
-            if (s.category) parts.push(`<span class="text-muted">${s.category}</span>`);
-            if (s.day_type) parts.push(`<strong>${s.day_type}</strong>`);
-            if (s.lines) parts.push(`<span class="badge text-bg-light text-dark border">${s.lines}</span>`);
-            const header = parts.length ? `<div class="mb-1">${parts.join(' · ')}</div>` : '';
-            li.innerHTML = `${header}<div>${s.hours}</div>`;
-            el.appendChild(li);
-        });
-    }
-
-    async function refreshMetroStatus() {
-        try {
-            const resp = await fetch("{% url 'metro_status_api' %}");
-            const data = await resp.json();
-
-            const errorBox = document.getElementById('metro-error');
-            if (!data.ok && data.error) {
-                errorBox.textContent = `⚠️ ${data.error}`;
-                errorBox.classList.remove('d-none');
-            } else {
-                errorBox.classList.add('d-none');
-            }
-
-            renderMetroLineStatus(data.line_status);
-            renderMetroNews(data.news);
-            renderMetroSchedules(data.schedules);
-            metroFetchedAt = new Date(data.fetched_at);
-            renderMetroUpdatedBadge();
-        } catch (e) {
-            console.error('No se pudo actualizar el estado del Metro', e);
-        }
-    }
-
-    // Carga inicial + refresco cada 5 minutos (el scraping real solo
-    // ocurre cada 10 min gracias a la caché del servidor).
-    refreshMetroStatus();
-    setInterval(refreshMetroStatus, 5 * 60 * 1000);
-    // Recalcula el texto "hace X min" cada 30s sin volver a pedir datos.
-    setInterval(renderMetroUpdatedBadge, 30 * 1000);
 </script>
 
 </body>
