@@ -1,7 +1,23 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
+from django.utils.http import url_has_allowed_host_and_scheme
 from core.models import ParkingLot
 from .models import ParkingReport
+
+
+def _redirect_back(request):
+    """
+    Redirige a la página desde donde se envió el formulario (home o el
+    detalle de un parqueadero), o a home si no hay referer disponible o
+    si el referer no pertenece a este sitio (evita open redirects).
+    """
+    referer = request.META.get('HTTP_REFERER')
+    if referer and url_has_allowed_host_and_scheme(
+        referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(referer)
+    return redirect('home')
+
 
 def report_available_space(request, lot_id):
     """
@@ -33,8 +49,8 @@ def report_available_space(request, lot_id):
         tipos = {'car': 'de carro', 'motorcycle': 'de moto', 'accessibility': 'PMR'}
         tipo_texto = tipos.get(vehicle_type, '')
         messages.success(request, f'¡Gracias! Reportaste un espacio disponible {tipo_texto} en {lot.name}.')
-        
-    return redirect('home')
+
+    return _redirect_back(request)
 
 
 def report_occupied_space(request, lot_id):
@@ -67,5 +83,5 @@ def report_occupied_space(request, lot_id):
         tipos = {'car': 'de carro', 'motorcycle': 'de moto', 'accessibility': 'PMR'}
         tipo_texto = tipos.get(vehicle_type, '')
         messages.success(request, f'¡Gracias! Reportaste que ocupaste un espacio {tipo_texto} en {lot.name}.')
-        
-    return redirect('home')
+
+    return _redirect_back(request)
