@@ -235,6 +235,74 @@
     </div>
 
 
+    <!-- ============================================================
+     REQUERIMIENTO FR30: Reportar información incorrecta
+     Permite al usuario reportar información incorrecta de un
+     parqueadero y especificar el tipo de vehículo y descripción.
+     ============================================================ -->
+
+<div class="container mb-5">
+    <h2 class="h4 mb-3">Reportar información incorrecta</h2>
+
+    <p class="text-muted">
+        ¿Encontraste información incorrecta sobre un parqueadero?
+        Selecciona el parqueadero y describe el problema.
+    </p>
+
+    <div class="row g-3">
+        {% for item in parking_lots %}
+        <div class="col-12 col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h3 class="h5">{{ item.lot.name }}</h3>
+
+                    <form method="post" action="{% url 'report_incorrect' item.lot.id %}">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="vehicle_type_{{ item.lot.id }}" class="form-label">
+                                Tipo de vehículo
+                            </label>
+
+                            <select
+                                class="form-select"
+                                id="vehicle_type_{{ item.lot.id }}"
+                                name="vehicle_type"
+                            >
+                                <option value="general">No especificado</option>
+                                <option value="car">Carro</option>
+                                <option value="motorcycle">Moto</option>
+                                <option value="accessibility">Movilidad reducida</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description_{{ item.lot.id }}" class="form-label">
+                                ¿Qué información es incorrecta?
+                            </label>
+
+                            <textarea
+                                class="form-control"
+                                id="description_{{ item.lot.id }}"
+                                name="description"
+                                rows="3"
+                                placeholder="Describe qué información está incorrecta..."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning">
+                            Reportar información incorrecta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
     <!-- ================================================================
          REQUERIMIENTO FR37 Nicolas M: Enlaces a apps de transporte externo
          La lista de botones sale de core/transport_links.py; para agregar

@@ -85,3 +85,30 @@ def report_occupied_space(request, lot_id):
         messages.success(request, f'¡Gracias! Reportaste que ocupaste un espacio {tipo_texto} en {lot.name}.')
 
     return _redirect_back(request)
+
+def report_incorrect_information(request, lot_id):
+    """
+    Vista para FR30: Reportar información incorrecta.
+    """
+    if request.method == 'POST':
+        lot = get_object_or_404(ParkingLot, id=lot_id)
+
+        vehicle_type = request.POST.get('vehicle_type', 'general')
+        description = request.POST.get('description', '').strip()
+
+        ParkingReport.objects.create(
+            lot=lot,
+            report_type='incorrect',
+            vehicle_type=vehicle_type,
+            description=description,
+            status='pending'
+        )
+
+        messages.success(
+            request,
+            f'¡Gracias! Reportaste información incorrecta en {lot.name}.'
+        )
+
+        return redirect('home')
+
+    return redirect('home')

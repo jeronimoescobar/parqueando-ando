@@ -32,6 +32,21 @@ def marcar_como_invalido(modeladmin, request, queryset):
     )
 
 
+@admin.action(description="Eliminar reportes inválidos")
+def remove_invalid_reports(modeladmin, request, queryset):
+    invalid_reports = queryset.filter(status="invalid")
+    deleted_count, _ = invalid_reports.delete()
+
+    modeladmin.message_user(
+        request,
+        gettext(
+            "%d reporte inválido fue eliminado."
+            if deleted_count == 1
+            else "%d reportes inválidos fueron eliminados."
+        ) % deleted_count,
+    )
+
+
 @admin.register(ParkingReport)
 class ParkingReportAdmin(admin.ModelAdmin):
     """
@@ -52,4 +67,4 @@ class ParkingReportAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
     readonly_fields = ("created_at",)
-    actions = (marcar_como_validado, marcar_como_invalido)
+    actions = (marcar_como_validado, marcar_como_invalido, remove_invalid_reports)
