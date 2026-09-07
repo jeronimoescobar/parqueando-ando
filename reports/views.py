@@ -1,3 +1,20 @@
+"""
+Vistas del componente REPORTS AND INFORMATION.
+
+Aquí viven las 3 formas en que un usuario (sin necesidad de login)
+reporta el estado de un parqueadero:
+
+    FR21 – Report available parking space  → report_available_space()
+    FR22 – Report occupied parking space   → report_occupied_space()
+    FR30 – Report incorrect parking info   → report_incorrect_information()
+
+Cada una crea un ParkingReport (status='pending') para que el
+administrador lo revise después en /admin/ (FR34 — ver reports/admin.py),
+y las dos primeras además ajustan al instante el contador de ocupación
+del ParkingLot correspondiente, para que el home se vea actualizado de
+inmediato sin esperar a que un admin valide el reporte.
+"""
+
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -19,6 +36,12 @@ def _redirect_back(request):
     return redirect('home')
 
 
+# ============================================================================
+# FR21 – Report available parking space
+# El usuario indica "me voy" / liberé un espacio de cierto tipo de
+# vehículo. Baja en 1 el contador de ocupados de ese tipo (sin bajar de 0)
+# y deja registro del reporte para que un admin lo valide (FR34).
+# ============================================================================
 def report_available_space(request, lot_id):
     """
     Vista para FR21: Report available parking space.
@@ -53,6 +76,12 @@ def report_available_space(request, lot_id):
     return _redirect_back(request)
 
 
+# ============================================================================
+# FR22 – Report occupied parking space
+# El usuario indica "acabo de llegar" / ocupé un espacio de cierto tipo de
+# vehículo. Sube en 1 el contador de ocupados de ese tipo (sin pasar la
+# capacidad) y deja registro del reporte para que un admin lo valide (FR34).
+# ============================================================================
 def report_occupied_space(request, lot_id):
     """
     Vista para FR22: Report occupied parking space.
@@ -86,6 +115,14 @@ def report_occupied_space(request, lot_id):
 
     return _redirect_back(request)
 
+
+# ============================================================================
+# FR30 – Report incorrect parking information
+# El usuario reporta que la info mostrada de un parqueadero está mal (sin
+# que esto cambie los contadores de ocupación — a diferencia de FR21/FR22,
+# esto NO se auto-aplica; solo queda pendiente para que un admin lo revise
+# manualmente en /admin/, ver FR34).
+# ============================================================================
 def report_incorrect_information(request, lot_id):
     """
     Vista para FR30: Reportar información incorrecta.

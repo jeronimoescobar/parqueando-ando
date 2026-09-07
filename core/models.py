@@ -137,6 +137,14 @@ class ParkingLot(models.Model):
         """Indica si este parqueadero ya tiene el plano montado (con spots)."""
         return self.spots.exists()
 
+    @property
+    def active_notices(self):
+        """
+        Avisos administrativos actualmente visibles para este parqueadero
+        (ej. "Entrada Norte cerrada por obras"). Ver ParkingLotNotice.
+        """
+        return self.notices.filter(active=True)
+
     class Meta:
         ordering = ["name"]
 
@@ -231,3 +239,40 @@ class ParkingSpot(models.Model):
 
     def __str__(self):
         return f"{self.lot.name} - {self.label}"
+
+
+class ParkingLotNotice(models.Model):
+    """
+    Aviso administrativo para aclarar algo puntual de un parqueadero —
+    ej. "Entrada Norte cerrada por obras", "Mantenimiento el viernes de
+    8am a 12m". No es un reporte de ocupación (eso es ParkingReport, en
+    la app `reports`); esto es información que el ADMINISTRADOR escribe
+    directamente para los usuarios, gestionado desde /admin/ (FR17 —
+    ver adminpanel/admin.py: ParkingLotNoticeInline).
+
+    Puede haber varios avisos por parqueadero a la vez (ej. uno sobre una
+    entrada cerrada y otro sobre un evento especial). `active=False` deja
+    el historial sin borrarlo, pero deja de mostrarse en el sitio — así
+    el admin no tiene que borrar y volver a escribir el mismo aviso cada
+    vez que deja de aplicar y vuelve a aplicar.
+    """
+    lot = models.ForeignKey(ParkingLot, on_delete=models.CASCADE, related_name="notices")
+    message = models.TextField(
+        verbose_name="Mensaje del aviso",
+        help_text="Ej: 'Entrada Norte cerrada por obras hasta el viernes'.",
+    )
+    active = models.BooleanField(
+        default=True,
+        verbose_name="Activo (visible en el sitio)",
+        help_text="Desmárcalo para ocultarlo sin borrar el historial.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Aviso de parqueadero"
+        verbose_name_plural = "Avisos de parqueadero"
+
+    def __str__(self):
+        preview = self.message if len(self.message) <= 40 else f"{self.message[:40]}..."
+        return f"{self.lot.name}: {preview}"

@@ -6,12 +6,15 @@ no es staff — el mismo login que usa /admin/ (mismo modelo de usuario,
 misma sesión de Django).
 """
 
+from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from core.models import ParkingLot, ParkingSpot
+from reports.models import ParkingReport
 
 
 @staff_member_required
@@ -20,6 +23,9 @@ def dashboard(request):
     FR16 – Administrator dashboard:
            Resumen en vivo de los 4 parqueaderos: ocupación, capacidad y
            estado de los espacios reportados por los usuarios en el plano.
+           También muestra cuántos reportes (FR21/FR22/FR30) están
+           pendientes de revisión, con acceso directo a gestionarlos
+           (FR32, FR34 — ver reports_management más abajo).
 
     FR17 – Parking data management:
            Enlaza a /admin/ (editar capacidad, subir el plano) y al
@@ -28,7 +34,11 @@ def dashboard(request):
            la gestión es siempre sobre los existentes.
     """
     lots = ParkingLot.objects.all()
-    return render(request, "adminpanel/dashboard.html", {"lots": lots})
+    pending_reports_count = ParkingReport.objects.filter(status="pending").count()
+    return render(request, "adminpanel/dashboard.html", {
+        "lots": lots,
+        "pending_reports_count": pending_reports_count,
+    })
 
 
 # ── Mapeador visual de espacios (clic para ubicar, arrastrar, girar) ───────────
@@ -145,3 +155,128 @@ def mapper_delete_spot(request, slug, spot_id):
     spot = get_object_or_404(ParkingSpot, id=spot_id, lot__slug=slug)
     spot.delete()
     return JsonResponse({"ok": True})
+
+
+# ── Gestión de reportes (FR32, FR34) ────────────────────────────────────────────
+#
+# Un compañero implementó esto originalmente SOLO en el admin de Django
+# (/admin/ → reports/admin.py: ParkingReportAdmin, con sus acciones
+# "Marcar como Validado/Inválido" y "Eliminar reportes inválidos"). Esa
+# vista se queda intacta y sigue funcionando igual — lo que faltaba era
+# exponer lo mismo desde ESTE dashboard (que es adonde ya mandamos al
+# administrador para todo lo demás), para no obligarlo a saltar a
+# /admin/ solo para esta tarea. Las vistas de abajo llaman a los MISMOS
+# campos y estados del modelo (ParkingReport.status), así que un reporte
+# validado/invalidado desde aquí se ve exactamente igual en /admin/, y
+# viceversa — es una segunda puerta de entrada a los mismos datos, no un
+# sistema paralelo.
+
+
+@staff_member_required
+def reports_management(request):
+    """
+    FR34 – Validate parking reports:
+           Lista los reportes enviados por los usuarios (FR21/FR22/FR30),
+           agrupados por estado en pestañas (Pendientes/Válidos/
+           Inválidos), para que el administrador los revise sin salir
+           del dashboard.
+    FR32 – Remove invalid parking reports:
+           Botón "Eliminar todos los inválidos" (borra en lote los que
+           ya están marcados como 'invalid') además de eliminar uno por
+           uno desde su fila.
+
+    El filtro de la pestaña viene por query string (?status=pending, por
+    ejemplo) para poder enlazarlo directo desde otras páginas (ej. el
+    dashboard podría linkear directo a "?status=pending").
+    """
+    status_filter = request.GET.get("status", "pending")
+    valid_statuses = dict(ParkingReport.STATUS_CHOICES)
+
+    reports_qs = ParkingReport.objects.select_related("lot").order_by("-created_at")
+    if status_filter in valid_statuses:
+        reports_qs = reports_qs.filter(status=status_filter)
+    else:
+        status_filter = "all"
+
+    # Se arma la lista de pestañas ya con su conteo aquí (en vez de un
+    # dict que el template tendría que indexar por variable, algo que
+    # el lenguaje de templates de Django no permite directamente).
+    status_tabs = [
+        {
+            "value": value,
+            "label": label,
+            "count": ParkingReport.objects.filter(status=value).count(),
+        }
+        for value, label in ParkingReport.STATUS_CHOICES
+    ]
+
+    context = {
+        "reports": reports_qs,
+        "status_filter": status_filter,
+        "status_tabs": status_tabs,
+        "total_count": ParkingReport.objects.count(),
+    }
+    return render(request, "adminpanel/reports_management.html", context)
+
+
+def _redirect_to_reports(request):
+    """
+    Vuelve a la lista de reportes preservando la pestaña (status) desde
+    la que se disparó la acción — el formulario manda ese valor en un
+    campo oculto `redirect_status`. Evitamos usar HTTP_REFERER a propósito
+    (es un vector de open-redirect si no se valida el host).
+    """
+    status = request.POST.get("redirect_status", "pending")
+    valid_values = set(dict(ParkingReport.STATUS_CHOICES)) | {"all"}
+    if status not in valid_values:
+        status = "pending"
+    return redirect(f"{reverse('reports_management')}?status={status}")
+
+
+@staff_member_required
+@require_POST
+def report_set_status(request, report_id):
+    """
+    Cambia el estado de un reporte individual (Validar / Invalidar) desde
+    una fila de la tabla del dashboard. Mismo efecto que editar el campo
+    `status` de un ParkingReport en /admin/.
+    """
+    report = get_object_or_404(ParkingReport, id=report_id)
+    new_status = request.POST.get("status")
+
+    if new_status not in dict(ParkingReport.STATUS_CHOICES):
+        messages.error(request, "Estado inválido.")
+        return _redirect_to_reports(request)
+
+    report.status = new_status
+    report.save(update_fields=["status"])
+    messages.success(request, f"Reporte #{report.id} marcado como '{report.get_status_display()}'.")
+
+    return _redirect_to_reports(request)
+
+
+@staff_member_required
+@require_POST
+def report_delete(request, report_id):
+    """Elimina un reporte individual (cualquier estado) desde su fila."""
+    report = get_object_or_404(ParkingReport, id=report_id)
+    report.delete()
+    messages.success(request, f"Reporte #{report_id} eliminado.")
+    return _redirect_to_reports(request)
+
+
+@staff_member_required
+@require_POST
+def reports_delete_all_invalid(request):
+    """
+    FR32 – Remove invalid parking reports (acción en lote).
+    Borra TODOS los reportes que ya estén marcados como 'invalid' — el
+    mismo efecto que la acción "Eliminar reportes inválidos" del admin
+    de Django, pero accesible desde el dashboard con un solo botón.
+    """
+    deleted_count, _ = ParkingReport.objects.filter(status="invalid").delete()
+    if deleted_count:
+        messages.success(request, f"Se eliminaron {deleted_count} reporte(s) inválido(s).")
+    else:
+        messages.info(request, "No había reportes inválidos para eliminar.")
+    return redirect(f"{reverse('reports_management')}?status=invalid")

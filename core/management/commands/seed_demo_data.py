@@ -4,15 +4,25 @@ Comando de gestión para cargar datos de demostración.
 Uso:
     python manage.py seed_demo_data
 
-Crea los 4 parqueaderos que ya aparecen marcados en el mapa del home
-(Norte, Sur, Parque de los Guayabos y Empleados) con capacidades y
-ocupación variadas —para que en la demo se vea al menos un parqueadero
-"Disponible", uno "Limitado" y uno "Lleno"— y un par de reportes en
-estado "Pendiente de revisión" para poder mostrar FR34 (validar
-reportes) sin tener que generarlos a mano desde el home primero.
+IMPORTANTE — no crea parqueaderos nuevos: los 4 parqueaderos del campus
+son fijos y ya se crean automáticamente al correr `migrate` (ver
+core/migrations/0006_seed_fixed_parking_lots.py). Este comando SOLO
+actualiza esos mismos 4 (por slug) con capacidades y ocupación variadas
+—para que en la demo se vea al menos un parqueadero "Disponible", uno
+"Limitado" y uno "Lleno"— y agrega un par de reportes en estado
+"Pendiente de revisión" para poder mostrar FR34 (validar reportes) sin
+tener que generarlos a mano desde el home primero.
 
-Es seguro correrlo varias veces: usa get_or_create, así que no duplica
-los parqueaderos si ya existen (solo actualiza sus datos).
+Los slugs de abajo deben coincidir EXACTAMENTE con los de la migración
+0006 (parqueadero-norte, parqueadero-sur, parque-los-guayabos,
+parqueadero-de-empleados). Si no coinciden, `update_or_create` no
+encuentra el parqueadero existente y crea uno nuevo con ese slug
+distinto — quedarían 8 parqueaderos en vez de 4 en el home. (Así estaba
+antes de este arreglo: usaba slugs cortos como "norte"/"sur" que no
+existen en ningún otro lado del proyecto.)
+
+Es seguro correrlo varias veces: usa update_or_create, así que no
+duplica los parqueaderos si ya existen (solo actualiza sus datos).
 """
 
 from django.core.management.base import BaseCommand
@@ -27,7 +37,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         lots_data = [
             dict(
-                slug="norte",
+                slug="parqueadero-norte",
                 name="Parqueadero Norte",
                 total_capacity=50,
                 capacity_cars=40,
@@ -38,7 +48,7 @@ class Command(BaseCommand):
                 occupied_accessibility=0,
             ),  # Disponible
             dict(
-                slug="sur",
+                slug="parqueadero-sur",
                 name="Parqueadero Sur",
                 total_capacity=40,
                 capacity_cars=32,
@@ -49,7 +59,7 @@ class Command(BaseCommand):
                 occupied_accessibility=1,
             ),  # Limitado (~78%)
             dict(
-                slug="guayabos",
+                slug="parque-los-guayabos",
                 name="Parqueadero Parque de los Guayabos",
                 total_capacity=30,
                 capacity_cars=24,
@@ -60,7 +70,7 @@ class Command(BaseCommand):
                 occupied_accessibility=2,
             ),  # Lleno
             dict(
-                slug="empleados",
+                slug="parqueadero-de-empleados",
                 name="Parqueadero de Empleados",
                 total_capacity=25,
                 capacity_cars=20,
@@ -82,8 +92,8 @@ class Command(BaseCommand):
 
         # Un par de reportes pendientes para poder demostrar FR34 de una.
         reportes_demo = [
-            dict(lot=created_lots["norte"], report_type="available", vehicle_type="car"),
-            dict(lot=created_lots["sur"], report_type="occupied", vehicle_type="motorcycle"),
+            dict(lot=created_lots["parqueadero-norte"], report_type="available", vehicle_type="car"),
+            dict(lot=created_lots["parqueadero-sur"], report_type="occupied", vehicle_type="motorcycle"),
         ]
         for data in reportes_demo:
             _, created = ParkingReport.objects.get_or_create(

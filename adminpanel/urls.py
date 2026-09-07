@@ -11,6 +11,10 @@ from . import views
 #     /dashboard/mapper/<slug>/create/
 #     /dashboard/mapper/<slug>/spots/<id>/update/
 #     /dashboard/mapper/<slug>/spots/<id>/delete/
+#     /dashboard/reports/
+#     /dashboard/reports/<id>/status/
+#     /dashboard/reports/<id>/delete/
+#     /dashboard/reports/delete-invalid/
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
 
@@ -26,4 +30,10 @@ urlpatterns = [
         views.mapper_delete_spot,
         name="mapper_delete_spot",
     ),
+
+    # FR32, FR34 — gestión de reportes desde el dashboard (además de /admin/)
+    path("reports/", views.reports_management, name="reports_management"),
+    path("reports/<int:report_id>/status/", views.report_set_status, name="report_set_status"),
+    path("reports/<int:report_id>/delete/", views.report_delete, name="report_delete"),
+    path("reports/delete-invalid/", views.reports_delete_all_invalid, name="reports_delete_all_invalid"),
 ]

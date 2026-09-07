@@ -77,6 +77,40 @@ def _fetch_html(url):
     return resp.text
 
 
+def _friendly_connection_error(exc):
+    """
+    Traduce la excepción técnica de requests a un mensaje que de verdad
+    ayuda a diagnosticar. La mayoría de las veces que esto falla NO es un
+    bug del scraper — es que la máquina donde corre Django no tiene
+    salida a internet en ese momento (sin wifi/datos, firewall,
+    antivirus, VPN corporativa bloqueando la conexión, DNS caído, etc.).
+
+    Señal típica de esto: "NameResolutionError" / "getaddrinfo failed"
+    (Windows) o "Name or service not known" (Linux) — significa que ni
+    siquiera se pudo resolver el dominio, o sea que la petición nunca
+    llegó a salir de la máquina. Un error de la página en sí (ej. un 500
+    o un 404) se ve distinto y sí se muestra tal cual, porque ese ya es
+    un problema del sitio del Metro, no de la conexión.
+    """
+    text = str(exc)
+    if "NameResolutionError" in text or "getaddrinfo failed" in text or "Name or service not known" in text:
+        return (
+            "No se pudo resolver metrodemedellin.gov.co — probablemente el "
+            "servidor donde corre Django no tiene conexión a internet en "
+            "este momento (revisa wifi/datos, o si un firewall/antivirus/VPN "
+            "está bloqueando la salida). No es un error del código: en "
+            "cuanto haya internet, esto se vuelve a llenar solo en la "
+            "próxima actualización."
+        )
+    if isinstance(exc, requests.exceptions.Timeout):
+        return (
+            "metrodemedellin.gov.co no respondió a tiempo "
+            f"(más de {REQUEST_TIMEOUT}s). Puede ser el sitio lento o tu "
+            "conexión — se reintentará solo en la próxima actualización."
+        )
+    return f"No se pudo consultar metrodemedellin.gov.co: {exc}"
+
+
 def _scrape_news(html, limit=6):
     """
     Enlaces hacia /al-dia/noticias/... en la portada. No dependemos de
@@ -331,7 +365,7 @@ def fetch_metro_status():
         result["news"] = _scrape_news(home_html)
     except requests.RequestException as exc:
         result["ok"] = False
-        result["error"] = f"No se pudo consultar metrodemedellin.gov.co: {exc}"
+        result["error"] = _friendly_connection_error(exc)
 
     line_status, schedules = _scrape_via_browser()
     result["line_status"] = line_status

@@ -10,16 +10,17 @@ cambia en qué archivo vive el código.
 
 from django.contrib import admin
 
-from core.models import ParkingLot, ParkingSpot
+from core.models import ParkingLot, ParkingLotNotice, ParkingSpot
 
 
 class ParkingSpotInline(admin.TabularInline):
     """
+    FR17 – Parking data management (parte 1: espacios del plano).
     Permite "montar" el plano de cada parqueadero: por cada ParkingSpot se
     define su etiqueta, posición (%), rotación y tamaño sobre
-    `layout_image`, sin tocar código (FR17 — gestión de información de
-    parqueaderos). Para una edición más visual (clic sobre la imagen,
-    arrastrar, girar 90°), usa el mapeador en /dashboard/mapper/<slug>/.
+    `layout_image`, sin tocar código. Para una edición más visual (clic
+    sobre la imagen, arrastrar, girar 90°), usa el mapeador en
+    /dashboard/mapper/<slug>/ (ver adminpanel/views.py: spot_mapper).
     """
     model = ParkingSpot
     extra = 1
@@ -31,12 +32,38 @@ class ParkingSpotInline(admin.TabularInline):
     readonly_fields = ("status_updated_at",)
 
 
+class ParkingLotNoticeInline(admin.TabularInline):
+    """
+    FR17 – Parking data management (parte 3: avisos administrativos).
+    Aquí el administrador escribe avisos puntuales que aclaran algo del
+    parqueadero (ej. "Entrada Norte cerrada por obras") — se muestran en
+    la tarjeta de cada parqueadero en el home mientras `active` esté
+    marcado. No es un reporte de usuario (eso vive en la app `reports`);
+    es texto que el admin escribe directamente.
+    """
+    model = ParkingLotNotice
+    extra = 1
+    fields = ("message", "active", "created_at")
+    readonly_fields = ("created_at",)
+
+
 @admin.register(ParkingLot)
 class ParkingLotAdmin(admin.ModelAdmin):
+    """
+    FR17 – Parking data management (parte 2: datos generales).
+    Esta clase es la que permite al administrador editar nombre,
+    capacidad total, desglose por tipo de vehículo, el plano y los
+    avisos de cada parqueadero — junto con los inlines de arriba, esto es
+    "gestionar la información del parqueadero" en la práctica.
+
+    Los 4 parqueaderos son fijos (ver has_add_permission/
+    has_delete_permission abajo): la gestión es SIEMPRE sobre los
+    existentes, nunca de crear uno nuevo o borrar uno de los 4.
+    """
     list_display = ('name', 'total_capacity', 'occupied_spaces', 'last_updated')
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ('last_updated',)
-    inlines = [ParkingSpotInline]
+    inlines = [ParkingSpotInline, ParkingLotNoticeInline]
 
     fieldsets = (
         ("Información general", {
@@ -85,3 +112,17 @@ class ParkingSpotAdmin(admin.ModelAdmin):
     list_filter = ('lot', 'vehicle_type', 'status')
     search_fields = ('label',)
     readonly_fields = ('status_updated_at',)
+
+
+@admin.register(ParkingLotNotice)
+class ParkingLotNoticeAdmin(admin.ModelAdmin):
+    """
+    Vista plana de todos los avisos (además del inline de arriba), útil
+    para ver/desactivar avisos de varios parqueaderos sin entrar a cada
+    uno por separado.
+    """
+    list_display = ('lot', 'message', 'active', 'created_at')
+    list_filter = ('lot', 'active')
+    list_editable = ('active',)
+    search_fields = ('message', 'lot__name')
+    readonly_fields = ('created_at',)

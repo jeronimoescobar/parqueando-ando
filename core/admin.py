@@ -1,31 +1,17 @@
-from django.contrib import admin
+"""
+OJO: la personalización del admin de Django para los modelos de esta app
+(ParkingLot, ParkingSpot) NO vive aquí — vive en `adminpanel/admin.py`.
 
-from .models import ParkingLot
+Esto es intencional (no un descuido): la app `adminpanel` agrupa TODA la
+funcionalidad de administrador del proyecto (dashboard FR16, gestión de
+datos FR17, y el registro en /admin/) en un solo lugar, aunque los
+modelos en sí sigan definidos aquí en `core` porque el sitio público
+también los usa.
 
-
-@admin.register(ParkingLot)
-class ParkingLotAdmin(admin.ModelAdmin):
-    list_display = ('name', 'total_capacity', 'occupied_spaces', 'last_updated')
-    prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ('last_updated',)
-
-    fieldsets = (
-        ("Información general", {
-            "fields": ("name", "slug", "total_capacity", "last_updated"),
-        }),
-        ("Desglose por tipo de vehículo (Capacidad)", {
-            "fields": (
-                "capacity_cars",
-                "capacity_motorcycles",
-                "capacity_accessibility",
-            ),
-            "classes": ("collapse",),
-        }),
-        ("Desglose por tipo de vehículo (Ocupación)", {
-            "fields": (
-                "occupied_cars",
-                "occupied_motorcycles",
-                "occupied_accessibility",
-            ),
-        }),
-    )
+Si necesitas agregar o cambiar algo del admin de ParkingLot/ParkingSpot,
+edita adminpanel/admin.py — NO agregues un @admin.register(ParkingLot)
+aquí. Django no permite registrar el mismo modelo dos veces: si este
+archivo también registra ParkingLot, la app entera deja de arrancar con
+un error "AlreadyRegistered" (le pasó a este proyecto — así se descubrió
+que hacía falta este aviso).
+"""
