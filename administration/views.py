@@ -35,7 +35,7 @@ def dashboard(request):
     """
     lots = ParkingLot.objects.all()
     pending_reports_count = ParkingReport.objects.filter(status="pending").count()
-    return render(request, "adminpanel/dashboard.html", {
+    return render(request, "administration/dashboard.html", {
         "lots": lots,
         "pending_reports_count": pending_reports_count,
     })
@@ -54,7 +54,7 @@ def spot_mapper(request, slug):
     borrarlo. Todo vía fetch, sin recargar.
     """
     lot = get_object_or_404(ParkingLot, slug=slug)
-    return render(request, "adminpanel/spot_mapper.html", {"lot": lot, "spots": lot.spots.all()})
+    return render(request, "administration/spot_mapper.html", {"lot": lot, "spots": lot.spots.all()})
 
 
 @staff_member_required
@@ -216,7 +216,7 @@ def reports_management(request):
         "status_tabs": status_tabs,
         "total_count": ParkingReport.objects.count(),
     }
-    return render(request, "adminpanel/reports_management.html", context)
+    return render(request, "administration/reports_management.html", context)
 
 
 def _redirect_to_reports(request):

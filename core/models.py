@@ -248,7 +248,7 @@ class ParkingLotNotice(models.Model):
     8am a 12m". No es un reporte de ocupación (eso es ParkingReport, en
     la app `reports`); esto es información que el ADMINISTRADOR escribe
     directamente para los usuarios, gestionado desde /admin/ (FR17 —
-    ver adminpanel/admin.py: ParkingLotNoticeInline).
+    ver administration/admin.py: ParkingLotNoticeInline).
 
     Puede haber varios avisos por parqueadero a la vez (ej. uno sobre una
     entrada cerrada y otro sobre un evento especial). `active=False` deja

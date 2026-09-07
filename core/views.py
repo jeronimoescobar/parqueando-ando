@@ -2,8 +2,8 @@
 Vistas PÚBLICAS de la app core (sin login).
 
 La funcionalidad de administrador (dashboard, mapeador visual de
-espacios, personalización de /admin/) vive en la app `adminpanel` — ver
-adminpanel/views.py y adminpanel/admin.py.
+espacios, personalización de /admin/) vive en la app `administration` — ver
+administration/views.py y administration/admin.py.
 
 Sprint 1:
     home()               → FR5, FR6, FR7, FR28, FR8, FR9, FR10, FR37

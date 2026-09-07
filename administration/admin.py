@@ -20,7 +20,7 @@ class ParkingSpotInline(admin.TabularInline):
     define su etiqueta, posición (%), rotación y tamaño sobre
     `layout_image`, sin tocar código. Para una edición más visual (clic
     sobre la imagen, arrastrar, girar 90°), usa el mapeador en
-    /dashboard/mapper/<slug>/ (ver adminpanel/views.py: spot_mapper).
+    /dashboard/mapper/<slug>/ (ver administration/views.py: spot_mapper).
     """
     model = ParkingSpot
     extra = 1

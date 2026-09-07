@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class AdminpanelConfig(AppConfig):
+class AdministrationConfig(AppConfig):
     """
     App que agrupa TODA la funcionalidad de administrador de Parqueando
     Ando en un solo lugar:
@@ -16,5 +16,5 @@ class AdminpanelConfig(AppConfig):
     las HERRAMIENTAS de administración sobre esos modelos.
     """
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'adminpanel'
-    verbose_name = 'Panel de administración (Parqueando Ando)'
+    name = 'administration'
+    verbose_name = 'Administración (Parqueando Ando)'

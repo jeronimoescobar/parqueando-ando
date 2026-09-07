@@ -26,8 +26,8 @@ urlpatterns = [
     path('', include('core.urls')),
     path('reports/', include('reports.urls')),
     # Dashboard + mapeador visual de espacios (toda la funcionalidad de
-    # administrador agrupada en la app `adminpanel`).
-    path('dashboard/', include('adminpanel.urls')),
+    # administrador agrupada en la app `administration`).
+    path('dashboard/', include('administration.urls')),
 ]
 
 if settings.DEBUG:

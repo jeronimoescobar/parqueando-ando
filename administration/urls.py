@@ -3,7 +3,7 @@ from django.urls import path
 from . import views
 
 # Incluido desde parqueando_ando/urls.py como:
-#     path("dashboard/", include("adminpanel.urls"))
+#     path("dashboard/", include("administration.urls"))
 # así que las rutas de aquí NO llevan el prefijo "dashboard/" — ya lo
 # pone el include(). URLs finales resultantes:
 #     /dashboard/

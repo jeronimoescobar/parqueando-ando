@@ -19,4 +19,4 @@ urlpatterns = [
 ]
 
 # La funcionalidad de administrador (dashboard, mapeador visual) vive en
-# la app `adminpanel` (ver parqueando_ando/urls.py -> include('adminpanel.urls')).
+# la app `administration` (ver parqueando_ando/urls.py -> include('administration.urls')).

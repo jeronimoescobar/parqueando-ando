@@ -5,6 +5,9 @@ from .parking_recommendation import recommend_parking_lot
 
 
 class ParkingLotModelTest(TestCase):
+    def setUp(self):
+        ParkingLot.objects.all().delete()
+
     def test_create_parking_lot(self):
         lot = ParkingLot.objects.create(
             name="Parqueadero Central",
@@ -86,6 +89,9 @@ class ParkingRecommendationTest(TestCase):
 
 
 class HomeViewTest(TestCase):
+    def setUp(self):
+        ParkingLot.objects.all().delete()
+
     def test_home_view_displays_parking_lots(self):
         lot1 = ParkingLot.objects.create(
             name="Parqueadero Sur",
