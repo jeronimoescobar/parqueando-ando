@@ -2,119 +2,255 @@
 Vistas PÚBLICAS de la app core (sin login).
 
 La funcionalidad de administrador (dashboard, mapeador visual de
-espacios, personalización de /admin/) vive en la app `administration` — ver
-administration/views.py y administration/admin.py.
+espacios, personalización de /admin/) vive en la app `administration` —
+ver administration/views.py y administration/admin.py.
 
 Sprint 1:
-    home()               → FR5, FR6, FR7, FR28, FR8, FR9, FR10, FR37
+    home()                → FR5, FR6, FR7, FR28, FR8, FR9, FR10, FR37
 
 Sprint 2:
-    parking_detail()     → FR26, FR27 (+ mapa interactivo por espacio)
-    update_spot_status() → mapa interactivo (reporte ocupado/vacío/no se sabe)
-    metro_status_api()   → estado del Metro (scraping cacheado)
+    parking_detail()      → FR26, FR27 (+ mapa interactivo por espacio)
+    update_spot_status()  → mapa interactivo (ocupado/vacío/no se sabe)
+    metro_status_api()    → estado del Metro (scraping cacheado)
+
+Sprint 3 — actualización en vivo, búsqueda y favoritos:
+    lots_state_api()      → estado actual de TODOS los parqueaderos en JSON.
+                            El home lo consulta cada 30s y repinta solo los
+                            números, sin recargar la página (así la persona
+                            no pierde el scroll ni lo que tenía abierto).
+    search_api()          → búsqueda inteligente por nombre, apodo o intención.
+    toggle_favorite_api() → marcar/desmarcar un parqueadero como favorito.
 """
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .metro_status import get_metro_status
+from .favorites import favorite_lot_ids, toggle_favorite
+from .metro_status import get_metro_status, serialize_metro_status
 from .models import ParkingLot, ParkingSpot
 from .parking_recommendation import recommend_parking_lot
+from .search import search_parking_lots
 from .transport_links import TRANSPORT_LINKS
 from .waiting_time import estimate_waiting_time
 
 
-# ── Sprint 1 ───────────────────────────────────────────────────────────────────
+# ── Serialización compartida ──────────────────────────────────────────────────
+
+
+def serialize_lot(lot, favorite_ids=frozenset()):
+    """
+    Estado de un parqueadero en formato JSON.
+
+    Lo usan tanto el polling en vivo del home (lots_state_api) como la
+    búsqueda, para que la interfaz reciba siempre la misma forma de datos
+    y no haya dos maneras distintas de pintar lo mismo.
+    """
+    waiting = estimate_waiting_time(lot)
+    counts = lot.spot_status_counts
+
+    return {
+        "id": lot.id,
+        "slug": lot.slug,
+        "name": lot.name,
+        "is_favorite": lot.id in favorite_ids,
+
+        # Ocupación general (FR6, FR7, FR28)
+        "total_capacity": lot.total_capacity,
+        "occupied_spaces": lot.occupied_spaces,
+        "available_spaces": lot.available_spaces,
+        "occupancy_percentage": lot.occupancy_percentage,
+        "occupancy_percentage_css": lot.occupancy_percentage_css,
+        "occupancy_status": lot.occupancy_status,
+        "occupancy_status_display": lot.occupancy_status_display,
+
+        # Desglose por tipo de vehículo (FR26)
+        "capacity_cars": lot.capacity_cars,
+        "capacity_motorcycles": lot.capacity_motorcycles,
+        "capacity_accessibility": lot.capacity_accessibility,
+        "occupied_cars": lot.occupied_cars,
+        "occupied_motorcycles": lot.occupied_motorcycles,
+        "occupied_accessibility": lot.occupied_accessibility,
+        "available_cars": lot.available_cars,
+        "available_motorcycles": lot.available_motorcycles,
+        "available_accessibility": lot.available_accessibility,
+
+        # Espera estimada (FR10)
+        "waiting_label": waiting["label"],
+        "waiting_level": waiting["level"],
+
+        # Ubicación, para el mapa (Sprint 3: ya no está escrita a mano en el HTML)
+        "latitude": float(lot.latitude) if lot.latitude is not None else None,
+        "longitude": float(lot.longitude) if lot.longitude is not None else None,
+
+        # Avisos del administrador
+        "notices": [n.message for n in lot.active_notices],
+
+        # Estado del plano interactivo
+        "spot_counts": counts,
+        "has_layout": bool(lot.layout_image),
+
+        "last_updated": lot.last_updated.isoformat() if lot.last_updated else None,
+    }
+
+
+# ── Sprint 1 ──────────────────────────────────────────────────────────────────
 
 
 def home(request):
     """
     Página principal del sistema.
 
-    FR5  – Display university parking lots:
-           Recupera y muestra todos los parqueaderos registrados.
-    FR6  – Display available parking spaces:
-           Cada contenedor muestra el estado cualitativo de disponibilidad.
-    FR7  – Display parking occupancy status:
-           Muestra la insignia de estado (Disponible / Limitado / Lleno).
-    FR28 – Parking full message:
-           Muestra un aviso explícito cuando el parqueadero está lleno.
-    FR8  – Display parking lot map:
-           El template renderiza el mapa Leaflet con los marcadores.
-    FR9  – Recommend parking lot:
-           El tiempo de espera y la ocupación sirven de guía para recomendar
-           el parqueadero más conveniente al usuario.
-    FR10 – Display estimated waiting time:
-           Incluye el tiempo estimado de espera por parqueadero usando
-           la lógica de `waiting_time.py`.
-    FR37 – External transportation links:
-           Incluye los enlaces a Uber, DiDi e InDrive, más el estado del
-           Metro (noticias, horarios y semáforo de líneas).
+    FR5  – Display university parking lots.
+    FR6  – Display available parking spaces.
+    FR7  – Display parking occupancy status.
+    FR28 – Parking full message.
+    FR8  – Display parking lot map (ahora dibujado desde la base de datos).
+    FR9  – Recommend parking lot.
+    FR10 – Display estimated waiting time.
+    FR37 – External transportation links + estado del Metro.
 
-    Cada parqueadero trae sus `spots` (ParkingSpot) para poder desplegar
-    su plano interactivo dentro del mismo acordeón, sin salir a
-    /parking/<slug>/ ni estorbar el mapa general (FR8).
+    Sprint 3: esta vista ya NO espera al scraping del Metro. `get_metro_status()`
+    lee de caché y, si hace falta, dispara el refresco en segundo plano —
+    así el home carga siempre rápido aunque el sitio del Metro esté lento
+    o no haya internet (antes podía quedarse 30 segundos cargando).
     """
-    lots = list(ParkingLot.objects.all())
-    parking_lots = []
+    lots = list(ParkingLot.objects.prefetch_related("spots", "notices"))
+    favorite_ids = favorite_lot_ids(request)
 
+    parking_lots = []
     for lot in lots:
         parking_lots.append({
             "lot": lot,
             "waiting_time": estimate_waiting_time(lot),
             "spots": lot.spots.all(),
+            "is_favorite": lot.id in favorite_ids,
         })
+
+    # Los favoritos van primero: si alguien marcó "mi parqueadero de
+    # siempre", lo lógico es que lo vea sin tener que bajar a buscarlo.
+    parking_lots.sort(key=lambda item: (not item["is_favorite"], item["lot"].name))
+
+    metro_state = get_metro_status()
 
     context = {
         "parking_lots": parking_lots,
         "transport_links": TRANSPORT_LINKS,
         "recommended_lot": recommend_parking_lot(lots) if lots else None,
-        "metro_status": get_metro_status(),
+        "metro_status": serialize_metro_status(metro_state),
+        "map_lots": [serialize_lot(lot, favorite_ids) for lot in lots if lot.has_coordinates],
+        "has_favorites": bool(favorite_ids),
     }
     return render(request, "core/home.html", context)
 
 
 def metro_status_api(request):
     """
-    Endpoint JSON que home.html consulta cada 5 minutos (fetch) para
-    refrescar el bloque de estado del Metro sin recargar la página. Usa
-    la misma caché de 10 minutos que la carga inicial (get_metro_status),
-    así que el scraping real a metrodemedellin.gov.co no ocurre en cada
-    refresco del navegador, solo cuando el caché vence.
+    Endpoint JSON que el home consulta periódicamente para refrescar el
+    bloque del Metro sin recargar la página.
+
+    Responde de inmediato con lo que haya en caché. El scraping real
+    ocurre en segundo plano (ver core/metro_status.py), así que esta
+    petición nunca se queda colgada esperando al sitio del Metro.
     """
-    data = get_metro_status()
+    return JsonResponse(serialize_metro_status(get_metro_status()))
+
+
+# ── Sprint 3: actualización en vivo, búsqueda y favoritos ─────────────────────
+
+
+def lots_state_api(request):
+    """
+    Estado actual de todos los parqueaderos, en JSON.
+
+    El home llama a esto cada 30 segundos y también justo después de que
+    alguien reporta algo. Con la respuesta repinta SOLO los números
+    (barra de ocupación, cupos, badges), sin recargar la página: así la
+    persona no pierde el scroll, ni el plano que tenía abierto, ni lo que
+    estaba escribiendo. Esto es lo que resuelve el "me devuelve al
+    comienzo de la página cada vez que reporto algo".
+    """
+    favorite_ids = favorite_lot_ids(request)
+    lots = ParkingLot.objects.prefetch_related("spots", "notices")
+
     return JsonResponse({
-        "news": data["news"],
-        "schedules": data["schedules"],
-        "line_status": data["line_status"],
-        "fetched_at": data["fetched_at"].isoformat(),
-        "ok": data["ok"],
-        "error": data["error"],
+        "ok": True,
+        "lots": [serialize_lot(lot, favorite_ids) for lot in lots],
     })
 
 
-# ── Sprint 2 ───────────────────────────────────────────────────────────────────
+def search_api(request):
+    """
+    Búsqueda inteligente de parqueaderos (Sprint 3).
+
+    No exige escribir el nombre exacto: entiende apodos ("el de
+    ingeniería"), errores de dedo ("parqeadero nrte") e intenciones sin
+    nombre ("el más desocupado", "uno para moto"). La lógica vive en
+    core/search.py; los apodos se editan desde /admin/ en el campo
+    "Otros nombres" de cada parqueadero, sin tocar código.
+    """
+    query = request.GET.get("q", "")
+    favorite_ids = favorite_lot_ids(request)
+
+    lots = list(ParkingLot.objects.prefetch_related("spots", "notices"))
+    matches = search_parking_lots(query, lots)
+
+    return JsonResponse({
+        "ok": True,
+        "query": query,
+        "results": [
+            {
+                "reason": match["reason"],
+                "score": match["score"],
+                **serialize_lot(match["lot"], favorite_ids),
+            }
+            for match in matches
+        ],
+    })
+
+
+@require_POST
+def toggle_favorite_api(request, lot_id):
+    """
+    Marca o desmarca un parqueadero como favorito (Sprint 3).
+
+    Funciona con o sin login: mientras no haya usuarios, el favorito
+    queda asociado a la sesión del navegador. Cuando el login exista,
+    basta con que llame a `core.favorites.attach_session_favorites_to_user`
+    y los favoritos anónimos pasan solos a la cuenta — ver core/favorites.py.
+    """
+    lot = get_object_or_404(ParkingLot, id=lot_id)
+    is_favorite = toggle_favorite(request, lot)
+
+    return JsonResponse({
+        "ok": True,
+        "lot_id": lot.id,
+        "is_favorite": is_favorite,
+        "message": (
+            f"{lot.name} quedó en tus favoritos."
+            if is_favorite
+            else f"{lot.name} ya no está en tus favoritos."
+        ),
+    })
+
+
+# ── Sprint 2 ──────────────────────────────────────────────────────────────────
 
 
 def parking_detail(request, slug):
     """
-    Vista de detalle de un parqueadero individual (acceso directo, por si
-    se comparte un link). El punto de entrada normal para los usuarios es
-    el acordeón del home, no esta página.
+    Vista de detalle de un parqueadero (acceso directo, por si se comparte
+    un link). El punto de entrada normal es el home, no esta página.
 
     FR26 – Display parking capacity.
     FR27 – Parking lot details.
-
-    Renderiza el plano interactivo: cada ParkingSpot se dibuja sobre
-    `lot.layout_image` en la posición (pos_x, pos_y) y el usuario puede
-    tocarlo para reportar si está ocupado, vacío, o si no sabe.
     """
     lot = get_object_or_404(ParkingLot, slug=slug)
     context = {
         "lot": lot,
         "waiting_time": estimate_waiting_time(lot),
         "spots": lot.spots.all(),
+        "is_favorite": lot.id in favorite_lot_ids(request),
     }
     return render(request, "core/parking_detail.html", context)
 
@@ -122,9 +258,8 @@ def parking_detail(request, slug):
 @require_POST
 def update_spot_status(request, slug, spot_id):
     """
-    Reporte de estado de un espacio puntual del plano (ocupado / vacío / no
-    se sabe). No requiere login: cualquier usuario que ve el plano puede
-    reportar, igual que con FR21/FR22 a nivel de parqueadero completo.
+    Reporte de estado de un espacio puntual del plano (ocupado / vacío /
+    no se sabe). No requiere login, igual que FR21/FR22.
 
     Responde JSON si la petición viene por fetch/AJAX (la usada por el
     plano interactivo); si no, hace un redirect normal como fallback.

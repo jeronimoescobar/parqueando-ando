@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -21,6 +22,43 @@ class ParkingLot(models.Model):
     slug = models.SlugField(max_length=100, unique=True)
     total_capacity = models.PositiveIntegerField()
     last_updated = models.DateTimeField(auto_now=True)
+
+    # ── Ubicación en el mapa (Sprint 3) ────────────────────────────────────
+    # Antes estas coordenadas estaban escritas a mano dentro de home.html,
+    # así que el mapa no sabía nada de la base de datos: no podía pintar el
+    # estado real de cada parqueadero ni actualizarse solo. Ahora viven aquí
+    # y el mapa se dibuja a partir de los parqueaderos reales.
+    latitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True,
+        verbose_name="Latitud",
+        help_text="Ej: 6.2018070. Si se deja vacío, el parqueadero no sale en el mapa.",
+    )
+    longitude = models.DecimalField(
+        max_digits=10, decimal_places=7, null=True, blank=True,
+        verbose_name="Longitud",
+        help_text="Ej: -75.5777196. Si se deja vacío, el parqueadero no sale en el mapa.",
+    )
+
+    # ── Búsqueda inteligente (Sprint 3) ────────────────────────────────────
+    search_aliases = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="Otros nombres / como le dice la gente",
+        help_text=(
+            "Nombres alternativos separados por coma, para que la búsqueda "
+            "los reconozca. Ej: 'norte, el de ingeniería, parqueadero de ing, "
+            "el de arriba'. No hace falta repetir el nombre oficial."
+        ),
+    )
+
+    @property
+    def alias_list(self):
+        """Los alias como lista limpia (sin vacíos ni espacios sobrantes)."""
+        return [a.strip() for a in self.search_aliases.split(",") if a.strip()]
+
+    @property
+    def has_coordinates(self):
+        return self.latitude is not None and self.longitude is not None
 
     # ── Plano del parqueadero (Sprint 2 — mapa interactivo por espacio) ─────
     layout_image = models.ImageField(
@@ -276,3 +314,76 @@ class ParkingLotNotice(models.Model):
     def __str__(self):
         preview = self.message if len(self.message) <= 40 else f"{self.message[:40]}..."
         return f"{self.lot.name}: {preview}"
+
+
+class FavoriteParkingLot(models.Model):
+    """
+    Un parqueadero marcado como favorito (Sprint 3).
+
+    ─────────────────────────────────────────────────────────────────────
+    NOTA PARA QUIEN IMPLEMENTE USUARIOS Y LOGIN
+    ─────────────────────────────────────────────────────────────────────
+    Este modelo ya está preparado para usuarios, pero NO depende de que
+    el login exista todavía. Funciona en dos modos:
+
+      * Sin login (hoy):  user=None  + session_key = la sesión del navegador.
+      * Con login:        user=<User> + session_key vacío.
+
+    `user` es un ForeignKey a settings.AUTH_USER_MODEL (no a auth.User
+    directamente), así que si se define un modelo de usuario propio,
+    esto sigue funcionando sin migración manual.
+
+    Cuando el login esté listo, lo único que hay que hacer es llamar a
+    `core.favorites.attach_session_favorites_to_user(request, user)`
+    justo después de autenticar — esa función ya está escrita y se
+    encarga de pasar los favoritos que la persona marcó como anónima a
+    su cuenta recién iniciada, sin duplicar. No hay que tocar este
+    modelo ni las vistas de favoritos.
+    ─────────────────────────────────────────────────────────────────────
+    """
+
+    lot = models.ForeignKey(ParkingLot, on_delete=models.CASCADE, related_name="favorited_by")
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="favorite_parking_lots",
+        null=True,
+        blank=True,
+        help_text="Queda vacío mientras la persona no haya iniciado sesión.",
+    )
+
+    session_key = models.CharField(
+        max_length=40,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text=(
+            "Sesión del navegador, para recordar favoritos de visitantes "
+            "sin cuenta. Se limpia cuando el favorito pasa a un usuario."
+        ),
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Parqueadero favorito"
+        verbose_name_plural = "Parqueaderos favoritos"
+        constraints = [
+            # Un usuario no puede tener el mismo parqueadero dos veces...
+            models.UniqueConstraint(
+                fields=["user", "lot"],
+                condition=models.Q(user__isnull=False),
+                name="unique_favorite_per_user",
+            ),
+            # ...ni una sesión anónima tampoco.
+            models.UniqueConstraint(
+                fields=["session_key", "lot"],
+                condition=models.Q(user__isnull=True),
+                name="unique_favorite_per_session",
+            ),
+        ]
+
+    def __str__(self):
+        owner = self.user or f"sesión {self.session_key[:8]}"
+        return f"{owner} ♥ {self.lot.name}"

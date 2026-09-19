@@ -10,7 +10,7 @@ cambia en qué archivo vive el código.
 
 from django.contrib import admin
 
-from core.models import ParkingLot, ParkingLotNotice, ParkingSpot
+from core.models import FavoriteParkingLot, ParkingLot, ParkingLotNotice, ParkingSpot
 
 
 class ParkingSpotInline(admin.TabularInline):
@@ -69,6 +69,25 @@ class ParkingLotAdmin(admin.ModelAdmin):
         ("Información general", {
             "fields": ("name", "slug", "total_capacity", "last_updated"),
         }),
+        ("Ubicación en el mapa (Sprint 3)", {
+            "fields": ("latitude", "longitude"),
+            "description": (
+                "Coordenadas del parqueadero. El mapa del home se dibuja a "
+                "partir de esto: si las dejas vacías, el parqueadero no "
+                "aparece como marcador. Para obtenerlas: abre Google Maps, "
+                "clic derecho sobre el sitio exacto y copia los dos números "
+                "que aparecen (primero latitud, después longitud)."
+            ),
+        }),
+        ("Búsqueda: cómo le dice la gente (Sprint 3)", {
+            "fields": ("search_aliases",),
+            "description": (
+                "Apodos separados por coma para que el buscador los "
+                "reconozca sin que la persona escriba el nombre exacto. "
+                "Entre más apodos reales agregues, mejor encuentra la gente "
+                "lo que busca."
+            ),
+        }),
         ("Plano del parqueadero (Sprint 2)", {
             "fields": ("layout_image",),
             "description": (
@@ -126,3 +145,24 @@ class ParkingLotNoticeAdmin(admin.ModelAdmin):
     list_editable = ('active',)
     search_fields = ('message', 'lot__name')
     readonly_fields = ('created_at',)
+
+
+@admin.register(FavoriteParkingLot)
+class FavoriteParkingLotAdmin(admin.ModelAdmin):
+    """
+    Favoritos marcados por las personas (Sprint 3).
+
+    Mientras no exista login, `user` aparece vacío y el favorito se
+    identifica por la sesión del navegador. Cuando el login esté
+    implementado, los favoritos anónimos se pasan solos a la cuenta —
+    ver core/favorites.py: attach_session_favorites_to_user().
+
+    Es de solo lectura a propósito: esto lo maneja cada persona desde el
+    home, un administrador no debería estar marcando favoritos ajenos.
+    """
+    list_display = ('lot', 'user', 'session_key', 'created_at')
+    list_filter = ('lot', 'created_at')
+    readonly_fields = ('lot', 'user', 'session_key', 'created_at')
+
+    def has_add_permission(self, request):
+        return False

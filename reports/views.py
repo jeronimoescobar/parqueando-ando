@@ -17,8 +17,11 @@ inmediato sin esperar a que un admin valide el reporte.
 
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
+from django.http import JsonResponse
 from django.utils.http import url_has_allowed_host_and_scheme
+from core.favorites import favorite_lot_ids
 from core.models import ParkingLot
+from core.views import serialize_lot
 from .models import ParkingReport
 
 
@@ -27,6 +30,11 @@ def _redirect_back(request):
     Redirige a la página desde donde se envió el formulario (home o el
     detalle de un parqueadero), o a home si no hay referer disponible o
     si el referer no pertenece a este sitio (evita open redirects).
+
+    Solo se usa como PLAN B: si el navegador tiene JavaScript activo, el
+    home envía estos reportes por fetch y recibe JSON (ver `_respond`),
+    así que nunca llega a recargar la página. Esto queda para quien
+    navegue sin JavaScript.
     """
     referer = request.META.get('HTTP_REFERER')
     if referer and url_has_allowed_host_and_scheme(
@@ -34,6 +42,45 @@ def _redirect_back(request):
     ):
         return redirect(referer)
     return redirect('home')
+
+
+def _is_ajax(request):
+    return (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('accept', '')
+    )
+
+
+def _respond(request, lot, message, fallback=None):
+    """
+    Responde al reporte según cómo llegó (Sprint 3).
+
+    ¿Por qué existe esto? Antes cada reporte hacía POST + redirect, o sea
+    una recarga completa de la página: la persona reportaba un cupo y el
+    navegador la devolvía al comienzo del home, perdiendo el scroll y el
+    plano que tuviera abierto. Molesto y confuso.
+
+    Ahora, si el reporte viene por fetch (que es lo normal desde el home),
+    devolvemos JSON con el estado NUEVO de ese parqueadero. El navegador
+    actualiza solo esa tarjeta, en el sitio, y muestra un aviso flotante.
+    Cero recargas, cero saltos de scroll.
+
+    Si llega sin JavaScript, cae al redirect de siempre y sigue
+    funcionando igual que antes.
+    """
+    if _is_ajax(request):
+        lot.refresh_from_db()
+        # Se pasan los favoritos de quien reporta: si no, la respuesta diría
+        # que el parqueadero no es favorito y la estrella de la tarjeta
+        # parpadearía apagándose por un instante.
+        return JsonResponse({
+            'ok': True,
+            'message': message,
+            'lot': serialize_lot(lot, favorite_lot_ids(request)),
+        })
+
+    messages.success(request, message)
+    return fallback if fallback is not None else _redirect_back(request)
 
 
 # ============================================================================
@@ -68,10 +115,13 @@ def report_available_space(request, lot_id):
             
         lot.save()
 
-        # 3. Mensaje de éxito
+        # 3. Confirmación (JSON si vino por fetch, mensaje + redirect si no)
         tipos = {'car': 'de carro', 'motorcycle': 'de moto', 'accessibility': 'PMR'}
         tipo_texto = tipos.get(vehicle_type, '')
-        messages.success(request, f'¡Gracias! Reportaste un espacio disponible {tipo_texto} en {lot.name}.')
+        return _respond(
+            request, lot,
+            f'¡Gracias! Reportaste un espacio disponible {tipo_texto} en {lot.name}.'
+        )
 
     return _redirect_back(request)
 
@@ -108,10 +158,13 @@ def report_occupied_space(request, lot_id):
             
         lot.save()
 
-        # 3. Mensaje de éxito
+        # 3. Confirmación (JSON si vino por fetch, mensaje + redirect si no)
         tipos = {'car': 'de carro', 'motorcycle': 'de moto', 'accessibility': 'PMR'}
         tipo_texto = tipos.get(vehicle_type, '')
-        messages.success(request, f'¡Gracias! Reportaste que ocupaste un espacio {tipo_texto} en {lot.name}.')
+        return _respond(
+            request, lot,
+            f'¡Gracias! Reportaste que ocupaste un espacio {tipo_texto} en {lot.name}.'
+        )
 
     return _redirect_back(request)
 
@@ -141,11 +194,11 @@ def report_incorrect_information(request, lot_id):
             status='pending'
         )
 
-        messages.success(
-            request,
-            f'¡Gracias! Reportaste información incorrecta en {lot.name}.'
+        return _respond(
+            request, lot,
+            f'¡Gracias! Reportaste información incorrecta en {lot.name}. '
+            f'Un administrador lo revisará.',
+            fallback=redirect('home'),
         )
-
-        return redirect('home')
 
     return redirect('home')
