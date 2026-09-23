@@ -28,7 +28,10 @@ El login/logout (FR2) está en core/auth_views.py.
 """
 
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
+from datetime import timedelta
+from django.utils import timezone
+from django.shortcuts import render
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
@@ -365,6 +368,20 @@ def update_spot_status(request, slug, spot_id):
     Responde JSON si la petición viene por fetch/AJAX (la usada por el
     plano interactivo); si no, hace un redirect normal como fallback.
     """
+
+    if not request.user.is_authenticated:
+        return JsonResponse({'ok': False, 'error': 'Debes iniciar sesión para reportar.'}, status=403)
+        
+    last_report_time_iso = request.session.get('last_report_time')
+    if last_report_time_iso:
+        try:
+            last_report_time = timezone.datetime.fromisoformat(last_report_time_iso)
+            if timezone.now() < last_report_time + timedelta(minutes=3):
+                return JsonResponse({'ok': False, 'error': 'Debes esperar 3 minutos entre reportes para evitar spam.'}, status=429)
+        except ValueError:
+            pass
+            
+    request.session['last_report_time'] = timezone.now().isoformat()
     spot = get_object_or_404(ParkingSpot, id=spot_id, lot__slug=slug)
     new_status = request.POST.get("status")
 

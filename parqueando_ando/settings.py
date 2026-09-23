@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'core',
     'reports',
     'administration',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -126,7 +127,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Login (FR2). A dónde ir DESPUÉS de entrar lo decide
 # core.auth_views.UserLoginView: staff -> dashboard, el resto -> home.
 # Este valor solo queda como respaldo.
-LOGIN_URL = 'login'
+LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 

@@ -1,0 +1,70 @@
+<!-- Modal de Confirmación de Reporte -->
+<div class="modal fade" id="confirmReportModal" tabindex="-1" aria-labelledby="confirmReportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title" id="confirmReportModalLabel">Confirmar Reporte</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-secondary">
+        ¿Estás seguro de enviar este reporte?<br>Verifica que la información es correcta.
+      </div>
+      <div class="modal-footer border-top-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="confirmReportBtn">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Error de Sesión -->
+<div class="modal fade" id="loginErrorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle"></i> Acción requerida</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-secondary">
+        Debes iniciar sesión para poder reportar el estado de los parqueaderos.
+      </div>
+      <div class="modal-footer border-top-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Entendido</button>
+        <a href="{% url 'accounts:login' %}" class="btn btn-primary">Iniciar sesión</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const IS_AUTHENTICATED = {{ request.user.is_authenticated|yesno:"true,false" }};
+
+  function confirmReport() {
+      if (!IS_AUTHENTICATED) {
+          const errorModalEl = document.getElementById('loginErrorModal');
+          const errorModal = new bootstrap.Modal(errorModalEl);
+          errorModal.show();
+          return Promise.resolve(false);
+      }
+      return new Promise((resolve) => {
+          const modalEl = document.getElementById('confirmReportModal');
+          const modal = new bootstrap.Modal(modalEl);
+          
+          const btnConfirm = document.getElementById('confirmReportBtn');
+          const clickHandler = () => {
+              btnConfirm.removeEventListener('click', clickHandler);
+              modal.hide();
+              resolve(true);
+          };
+          btnConfirm.addEventListener('click', clickHandler);
+          
+          modalEl.addEventListener('hidden.bs.modal', function onHide() {
+              modalEl.removeEventListener('hidden.bs.modal', onHide);
+              btnConfirm.removeEventListener('click', clickHandler);
+              resolve(false);
+          });
+          
+          modal.show();
+      });
+  }
+</script>
