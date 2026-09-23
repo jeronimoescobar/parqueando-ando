@@ -183,40 +183,40 @@ class UserLoginTest(TestCase):
         )
 
     def test_login_page_loads(self):
-        response = self.client.get(reverse("login"))
+        response = self.client.get(reverse("accounts:login"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Iniciar sesión")
 
     def test_regular_user_goes_to_home(self):
         response = self.client.post(
-            reverse("login"), {"username": "estudiante", "password": "clave-segura-123"}
+            reverse("accounts:login"), {"username": "estudiante", "password": "clave-segura-123"}
         )
         self.assertRedirects(response, reverse("home"), fetch_redirect_response=False)
         self.assertEqual(int(self.client.session["_auth_user_id"]), self.student.id)
 
     def test_staff_goes_to_dashboard(self):
         response = self.client.post(
-            reverse("login"), {"username": "admin", "password": "clave-segura-123"}
+            reverse("accounts:login"), {"username": "admin", "password": "clave-segura-123"}
         )
         self.assertRedirects(response, reverse("dashboard"), fetch_redirect_response=False)
 
     def test_next_parameter_is_respected(self):
         response = self.client.post(
-            reverse("login") + "?next=/informacion/",
+            reverse("accounts:login") + "?next=/informacion/",
             {"username": "estudiante", "password": "clave-segura-123", "next": "/informacion/"},
         )
         self.assertRedirects(response, "/informacion/", fetch_redirect_response=False)
 
     def test_external_next_is_ignored(self):
         response = self.client.post(
-            reverse("login"),
+            reverse("accounts:login"),
             {"username": "estudiante", "password": "clave-segura-123", "next": "https://evil.com/"},
         )
         self.assertRedirects(response, reverse("home"), fetch_redirect_response=False)
 
     def test_wrong_password_shows_error(self):
         response = self.client.post(
-            reverse("login"), {"username": "estudiante", "password": "mala"}
+            reverse("accounts:login"), {"username": "estudiante", "password": "mala"}
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Usuario o contraseña incorrectos")
@@ -231,12 +231,12 @@ class UserLoginTest(TestCase):
 
     def test_home_shows_login_link_when_anonymous(self):
         response = self.client.get(reverse("home"))
-        self.assertContains(response, reverse("login"))
+        self.assertContains(response, reverse("accounts:login"))
         self.assertContains(response, "Iniciar sesión")
 
     def test_logout_returns_home(self):
         self.client.login(username="estudiante", password="clave-segura-123")
-        response = self.client.post(reverse("logout"))
+        response = self.client.post(reverse("accounts:logout"))
         self.assertRedirects(response, reverse("home"), fetch_redirect_response=False)
         self.assertNotIn("_auth_user_id", self.client.session)
 
@@ -245,7 +245,7 @@ class UserLoginTest(TestCase):
         self.client.post(reverse("toggle_favorite_api", args=[lot.id]))
         self.assertTrue(FavoriteParkingLot.objects.filter(user__isnull=True, lot=lot).exists())
 
-        self.client.post(reverse("login"), {"username": "estudiante", "password": "clave-segura-123"})
+        self.client.post(reverse("accounts:login"), {"username": "estudiante", "password": "clave-segura-123"})
 
         self.assertTrue(FavoriteParkingLot.objects.filter(user=self.student, lot=lot).exists())
         self.assertFalse(FavoriteParkingLot.objects.filter(user__isnull=True, lot=lot).exists())

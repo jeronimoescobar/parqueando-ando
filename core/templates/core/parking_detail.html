@@ -253,6 +253,11 @@
         document.querySelectorAll('.spot-status-btn').forEach((btn) => {
             btn.addEventListener('click', async () => {
                 if (!currentSpotId) return;
+
+                if (!(await confirmReport())) {
+                    return;
+                }
+
                 const status = btn.dataset.status;
                 try {
                     const resp = await fetch(`/parking/${lotSlug}/spots/${currentSpotId}/status/`, {
@@ -270,14 +275,17 @@
                         marker.classList.remove('spot-empty', 'spot-occupied', 'spot-unknown');
                         marker.classList.add(`spot-${data.status}`);
                         marker.title = `${marker.dataset.label} — ${data.status_display}`;
+                    } else {
+                        alert(data.error || "No se pudo actualizar el espacio.");
                     }
                 } catch (e) {
-                    console.error('No se pudo actualizar el espacio', e);
+                    alert('No se pudo actualizar el espacio. Revisa tu conexión.');
                 } finally {
                     spotModal.hide();
                 }
             });
         });
     </script>
+    {% include 'core/_confirm_modal.html' %}
 </body>
 </html>

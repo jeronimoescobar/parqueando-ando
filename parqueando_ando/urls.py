@@ -19,22 +19,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from core.auth_views import UserLoginView, UserLogoutView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # FR2 – Login/logout para TODOS los usuarios (no solo staff). Van antes
-    # del include de abajo para reemplazar las vistas de Django por las
-    # nuestras (ver core/auth_views.py); el resto de rutas de
-    # django.contrib.auth.urls (cambio/recuperación de contraseña) siguen
-    # disponibles igual.
-    path('accounts/login/', UserLoginView.as_view(), name='login'),
-    path('accounts/logout/', UserLogoutView.as_view(), name='logout'),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/', include('accounts.urls')),
     path('', include('core.urls')),
     path('reports/', include('reports.urls')),
-    # Dashboard + mapeador visual de espacios (toda la funcionalidad de
-    # administrador agrupada en la app `administration`).
     path('dashboard/', include('administration.urls')),
 ]
 

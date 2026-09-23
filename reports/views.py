@@ -16,6 +16,8 @@ inmediato sin esperar a que un admin valide el reporte.
 """
 
 from django.shortcuts import get_object_or_404, redirect
+from datetime import timedelta
+from django.utils import timezone
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -24,6 +26,23 @@ from core.models import ParkingLot
 from core.views import serialize_lot
 from .models import ParkingReport
 
+
+
+def check_report_allowed(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'ok': False, 'error': 'Debes iniciar sesión para reportar.'}, status=403)
+        
+    last_report_time_iso = request.session.get('last_report_time')
+    if last_report_time_iso:
+        try:
+            last_report_time = timezone.datetime.fromisoformat(last_report_time_iso)
+            if timezone.now() < last_report_time + timedelta(minutes=3):
+                return JsonResponse({'ok': False, 'error': 'Debes esperar 3 minutos entre reportes para evitar spam.'}, status=429)
+        except ValueError:
+            pass
+            
+    request.session['last_report_time'] = timezone.now().isoformat()
+    return None
 
 def _redirect_back(request):
     """
@@ -94,6 +113,9 @@ def report_available_space(request, lot_id):
     Vista para FR21: Report available parking space.
     """
     if request.method == 'POST':
+        error_response = check_report_allowed(request)
+        if error_response:
+            return error_response
         lot = get_object_or_404(ParkingLot, id=lot_id)
         vehicle_type = request.POST.get('vehicle_type', 'general')
         
@@ -137,6 +159,9 @@ def report_occupied_space(request, lot_id):
     Vista para FR22: Report occupied parking space.
     """
     if request.method == 'POST':
+        error_response = check_report_allowed(request)
+        if error_response:
+            return error_response
         lot = get_object_or_404(ParkingLot, id=lot_id)
         vehicle_type = request.POST.get('vehicle_type', 'general')
         
@@ -181,6 +206,9 @@ def report_incorrect_information(request, lot_id):
     Vista para FR30: Reportar información incorrecta.
     """
     if request.method == 'POST':
+        error_response = check_report_allowed(request)
+        if error_response:
+            return error_response
         lot = get_object_or_404(ParkingLot, id=lot_id)
 
         vehicle_type = request.POST.get('vehicle_type', 'general')

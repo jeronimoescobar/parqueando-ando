@@ -1088,6 +1088,10 @@ document.querySelectorAll('form[data-ajax-report]').forEach((form) => {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();  // <- esto es lo que evita la recarga
 
+        if (!(await confirmReport())) {
+            return;
+        }
+
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn ? submitBtn.innerHTML : null;
         if (submitBtn) {
@@ -1704,5 +1708,6 @@ setInterval(refreshMetroStatus, 5 * 60 * 1000);
 setInterval(renderMetroAges, 20 * 1000);
 </script>
 
+    {% include 'core/_confirm_modal.html' %}
 </body>
 </html>

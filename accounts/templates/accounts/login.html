@@ -77,7 +77,7 @@
                 </form>
 
                 {# Si el registro (FR1) define una URL llamada 'register', aparece el link solo. #}
-                {% url 'register' as register_url %}
+                {% url 'accounts:register' as register_url %}
                 <div class="text-center mt-4 small">
                     {% if register_url %}
                     <p class="mb-2">¿No tienes cuenta? <a href="{{ register_url }}">Regístrate</a></p>
