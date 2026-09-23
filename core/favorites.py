@@ -6,22 +6,20 @@ parking_recommendation.py) para que quien implemente usuarios y login no
 tenga que ir a buscar esto dentro de views.py.
 
 ═══════════════════════════════════════════════════════════════════════
-PARA QUIEN IMPLEMENTE EL LOGIN — esto es lo único que tienes que hacer
+LOGIN (FR2) — ya está conectado
 ═══════════════════════════════════════════════════════════════════════
-Cuando alguien inicia sesión, llama a esta función justo después de
-`login(request, user)`:
+El login (core/auth_views.py) ya migra los favoritos: los que la persona
+marcó ANTES de tener sesión pasan a su cuenta, sin duplicados.
 
-    from core.favorites import attach_session_favorites_to_user
-    ...
-    login(request, user)
-    attach_session_favorites_to_user(request, user)
+Si en otro lugar haces login a mano (por ejemplo al terminar el
+registro), usa:
 
-Con eso, los favoritos que la persona marcó ANTES de tener cuenta pasan
-a su cuenta automáticamente, sin duplicados. No hay que tocar nada más:
-las vistas de favoritos ya detectan solas si hay usuario logueado o no.
+    from core.auth_views import log_user_in
+    log_user_in(request, user)      # en vez de login(request, user)
 
-Si usas un formulario de login propio, un `LoginView` de Django, o una
-señal `user_logged_in`, sirve igual — solo necesita `request` y `user`.
+No llames `login()` y luego `attach_session_favorites_to_user(request,
+user)` a secas: login() cambia la clave de sesión y la migración ya no
+encontraría los favoritos. log_user_in se encarga de ese detalle.
 ═══════════════════════════════════════════════════════════════════════
 """
 
@@ -94,17 +92,23 @@ def toggle_favorite(request, lot):
     return True
 
 
-def attach_session_favorites_to_user(request, user):
+def attach_session_favorites_to_user(request, user, session_key=None):
     """
     Pasa los favoritos de la sesión anónima a la cuenta que acaba de
     iniciar sesión. Ver el bloque grande arriba: esta es la función que
     el login debe llamar.
 
+    `session_key`: la clave de la sesión ANÓNIMA. Hay que pasarla porque
+    `login()` cambia la clave de sesión: si no se pasa, se usa la actual,
+    que después de login() ya es la nueva y no tiene favoritos. Lo más
+    fácil es no llamar esto directamente y usar
+    `core.auth_views.log_user_in(request, user)`, que ya lo hace bien.
+
     Si la persona ya tenía ese mismo parqueadero como favorito en su
     cuenta, el de la sesión simplemente se descarta (no se duplica).
     Devuelve cuántos favoritos se migraron.
     """
-    session_key = request.session.session_key
+    session_key = session_key or request.session.session_key
     if not session_key:
         return 0
 

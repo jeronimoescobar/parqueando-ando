@@ -3,50 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ingreso administrador · Parqueando Ando</title>
+    <title>Iniciar sesión · Parqueando Ando</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Los widgets de Django no traen clases de Bootstrap por defecto */
-        .card-body input[type="text"],
-        .card-body input[type="password"] {
-            display: block;
-            width: 100%;
-            padding: 0.375rem 0.75rem;
-            border: 1px solid #ced4da;
-            border-radius: 0.375rem;
+        body {
+            min-height: 100vh;
+            background: linear-gradient(160deg, #eef4ff 0%, #f8f9fa 55%);
         }
+        .login-card { border: none; border-radius: 1.25rem; }
+        .login-logo { font-size: 2.4rem; line-height: 1; }
+        .toggle-password { border-top-left-radius: 0; border-bottom-left-radius: 0; }
     </style>
 </head>
-<body class="bg-light d-flex align-items-center" style="min-height: 100vh;">
-    <div class="container" style="max-width: 420px;">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h1 class="h4 text-center mb-1">🅿️arqueando-Ando</h1>
-                <p class="text-muted text-center mb-4">Acceso administrador</p>
+<body class="d-flex align-items-center">
+    <!-- ================================================================
+         FR2 – User login
+         Mismo formulario para usuarios normales y para staff: después de
+         entrar, core.auth_views.UserLoginView decide a dónde mandarte
+         (?next= si venías de una página protegida; si no, staff al
+         dashboard y el resto al home).
+         ================================================================ -->
+    <main class="container py-5" style="max-width: 440px;">
+        <div class="card login-card shadow">
+            <div class="card-body p-4 p-sm-5">
+                <div class="text-center mb-4">
+                    <div class="login-logo mb-2">🅿️</div>
+                    <h1 class="h4 mb-1">Iniciar sesión</h1>
+                    <p class="text-muted small mb-0">Parqueando Ando · EAFIT</p>
+                </div>
 
-                {% if form.errors %}
-                <div class="alert alert-danger py-2">Usuario o contraseña incorrectos.</div>
+                {% if next and not form.errors %}
+                <div class="alert alert-info small py-2">Inicia sesión para continuar.</div>
                 {% endif %}
 
-                <form method="post">
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger small py-2" role="alert">
+                    Usuario o contraseña incorrectos. Revisa mayúsculas y minúsculas.
+                </div>
+                {% endif %}
+
+                <form method="post" novalidate>
                     {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+
                     <div class="mb-3">
                         <label for="{{ form.username.id_for_label }}" class="form-label">Usuario</label>
-                        {{ form.username }}
+                        <input type="text" name="{{ form.username.html_name }}"
+                               id="{{ form.username.id_for_label }}"
+                               value="{{ form.username.value|default:'' }}"
+                               class="form-control form-control-lg {% if form.username.errors %}is-invalid{% endif %}"
+                               autocomplete="username" autocapitalize="none" autofocus required>
+                        {% for error in form.username.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                    <div class="mb-3">
+
+                    <div class="mb-4">
                         <label for="{{ form.password.id_for_label }}" class="form-label">Contraseña</label>
-                        {{ form.password }}
+                        <div class="input-group">
+                            <input type="password" name="{{ form.password.html_name }}"
+                                   id="{{ form.password.id_for_label }}"
+                                   class="form-control form-control-lg {% if form.password.errors %}is-invalid{% endif %}"
+                                   autocomplete="current-password" required>
+                            <button type="button" class="btn btn-outline-secondary toggle-password"
+                                    id="toggle-password" aria-label="Mostrar contraseña">👁️</button>
+                            {% for error in form.password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <input type="hidden" name="next" value="{{ next }}">
-                    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Ingresar</button>
                 </form>
 
-                <div class="text-center mt-3">
-                    <a href="{% url 'home' %}" class="small text-muted">&larr; Volver al inicio</a>
+                {# Si el registro (FR1) define una URL llamada 'register', aparece el link solo. #}
+                {% url 'register' as register_url %}
+                <div class="text-center mt-4 small">
+                    {% if register_url %}
+                    <p class="mb-2">¿No tienes cuenta? <a href="{{ register_url }}">Regístrate</a></p>
+                    {% endif %}
+                    <a href="{% url 'home' %}" class="text-muted">&larr; Volver al inicio</a>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <script>
+        // Botón para ver/ocultar la contraseña (útil en el celular).
+        (function () {
+            const btn = document.getElementById('toggle-password');
+            const input = document.getElementById('{{ form.password.id_for_label }}');
+            if (!btn || !input) return;
+            btn.addEventListener('click', () => {
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                btn.textContent = show ? '🙈' : '👁️';
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -123,9 +123,12 @@ STATIC_URL = 'static/'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Login usado por @staff_member_required en el dashboard de administrador (FR16)
+# Login (FR2). A dónde ir DESPUÉS de entrar lo decide
+# core.auth_views.UserLoginView: staff -> dashboard, el resto -> home.
+# Este valor solo queda como respaldo.
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field

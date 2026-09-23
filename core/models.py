@@ -333,12 +333,10 @@ class FavoriteParkingLot(models.Model):
     directamente), así que si se define un modelo de usuario propio,
     esto sigue funcionando sin migración manual.
 
-    Cuando el login esté listo, lo único que hay que hacer es llamar a
-    `core.favorites.attach_session_favorites_to_user(request, user)`
-    justo después de autenticar — esa función ya está escrita y se
-    encarga de pasar los favoritos que la persona marcó como anónima a
-    su cuenta recién iniciada, sin duplicar. No hay que tocar este
-    modelo ni las vistas de favoritos.
+    El login (FR2, core/auth_views.py) ya pasa los favoritos que la
+    persona marcó como anónima a su cuenta recién iniciada, sin
+    duplicar. Si se hace login desde otro lugar (ej. el registro), usar
+    `core.auth_views.log_user_in(request, user)`.
     ─────────────────────────────────────────────────────────────────────
     """
 

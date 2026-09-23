@@ -6,6 +6,9 @@ urlpatterns = [
     # FR5, FR6, FR7, FR28, FR8, FR9, FR10, FR37
     path("", views.home, name="home"),
 
+    # FR35 — información general de los parqueaderos (horarios, tarifas, normas...)
+    path("informacion/", views.parking_info_view, name="parking_info"),
+
     # ── APIs JSON que mantienen la página viva sin recargarla (Sprint 3) ──
     # El home consulta estas rutas con fetch cada cierto tiempo y repinta
     # solo lo que cambió, para que la persona no pierda el scroll.

@@ -172,10 +172,73 @@
 
         .metro-updated-badge { font-size: .75rem; }
         .metro-stale { opacity: .72; }
+
+        /* ============================================================
+           FILTROS (FR12) — estado + tipo de vehículo
+           ============================================================ */
+        .filter-bar {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 1rem;
+            padding: .85rem 1rem;
+        }
+        .filter-row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+        .filter-row + .filter-row { margin-top: .6rem; }
+        .filter-label {
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: #6c757d;
+            min-width: 5.5rem;
+        }
+        .chip-group { display: flex; flex-wrap: wrap; gap: .4rem; }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .32rem .8rem;
+            border-radius: 999px;
+            border: 1px solid #dee2e6;
+            background: #fff;
+            color: #495057;
+            font-size: .875rem;
+            text-decoration: none;
+            user-select: none;
+            transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
+        }
+        .filter-chip:hover { border-color: #adb5bd; background: #f8f9fa; color: #212529; }
+        .filter-chip:active { transform: scale(.97); }
+        .filter-chip.active { background: #212529; border-color: #212529; color: #fff; }
+        .filter-chip.active[data-filter-value="available"] { background: #198754; border-color: #198754; }
+        .filter-chip.active[data-filter-value="limited"]   { background: #ffc107; border-color: #ffc107; color: #212529; }
+        .filter-chip.active[data-filter-value="full"]      { background: #dc3545; border-color: #dc3545; }
+        .filter-chip.active[data-filter-group="vehiculo"]:not([data-filter-value=""]) {
+            background: #0d6efd; border-color: #0d6efd;
+        }
+        .chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot-available { background: #198754; }
+        .dot-limited   { background: #ffc107; }
+        .dot-full      { background: #dc3545; }
+        .filter-chip.active .chip-dot { box-shadow: 0 0 0 2px rgba(255,255,255,.85); }
+        .chip-count {
+            font-size: .72rem;
+            font-weight: 600;
+            background: rgba(0,0,0,.07);
+            border-radius: 999px;
+            padding: 0 .45rem;
+            min-width: 1.4rem;
+            text-align: center;
+        }
+        .filter-chip.active .chip-count { background: rgba(255,255,255,.28); }
+        .lot-card.filtered-out { display: none !important; }
     </style>
 </head>
 
 <body class="bg-light">
+
+    <!-- Barra superior: login/logout (FR2) e información general (FR35) -->
+    {% include "core/_navbar.html" with active="home" %}
 
     <!-- Avisos flotantes: aquí aparecen las confirmaciones de los reportes
          sin recargar la página ni mover el scroll. -->
@@ -287,7 +350,7 @@
          de cada reporte) SIN recargar la página. Así la persona no
          pierde el scroll ni lo que tenía abierto.
          ================================================================ -->
-    <div class="container mb-5">
+    <div class="container mb-5" id="disponibilidad">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <h2 class="h4 mb-0">Disponibilidad de parqueaderos</h2>
             {% if has_favorites %}
@@ -296,10 +359,73 @@
         </div>
 
         {% if parking_lots %}
+        <!-- ============================================================
+             FR12 – Filtrar parqueaderos por disponibilidad
+             Dos filtros que se combinan: estado (Disponible / Limitado /
+             Lleno) y "con cupo para" un tipo de vehículo. Los botones
+             son links (?estado=...&vehiculo=...), así funcionan sin
+             JavaScript y el link se puede compartir; con JavaScript se
+             aplican al instante, sin recargar, y se mantienen cuando los
+             datos se actualizan solos cada 30s. Reglas en core/filters.py.
+             ============================================================ -->
+        <div class="filter-bar shadow-sm mb-3" id="filter-bar"
+             data-initial-estado="{{ active_filters.status|default:'' }}"
+             data-initial-vehiculo="{{ active_filters.vehicle|default:'' }}">
+            <div class="filter-row">
+                <span class="filter-label">Estado</span>
+                <div class="chip-group" role="group" aria-label="Filtrar por estado">
+                    {% for opt in status_filter_options %}
+                    <a href="{{ opt.href }}" class="filter-chip {% if opt.active %}active{% endif %}"
+                       data-filter-group="estado" data-filter-value="{{ opt.value }}"
+                       aria-pressed="{% if opt.active %}true{% else %}false{% endif %}">
+                        {% if opt.value %}<span class="chip-dot dot-{{ opt.value }}"></span>{% endif %}
+                        {{ opt.label }}
+                        <span class="chip-count" data-status-count="{{ opt.value|default:'all' }}">{{ opt.count }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="filter-row">
+                <span class="filter-label">Con cupo para</span>
+                <div class="chip-group" role="group" aria-label="Filtrar por tipo de vehículo">
+                    {% for opt in vehicle_filter_options %}
+                    <a href="{{ opt.href }}" class="filter-chip {% if opt.active %}active{% endif %}"
+                       data-filter-group="vehiculo" data-filter-value="{{ opt.value }}"
+                       aria-pressed="{% if opt.active %}true{% else %}false{% endif %}">
+                        {% if opt.icon %}<span aria-hidden="true">{{ opt.icon }}</span>{% endif %}
+                        {{ opt.label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center small text-muted mb-2" aria-live="polite">
+            <span>
+                Mostrando <strong id="filter-visible-count">{{ visible_lots_count }}</strong>
+                de {{ parking_lots|length }} parqueaderos
+            </span>
+            <a href="{% url 'home' %}#disponibilidad" class="link-secondary {% if not active_filters.status and not active_filters.vehicle %}d-none{% endif %}"
+               id="filter-clear">Quitar filtros ✕</a>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3 {% if visible_lots_count %}d-none{% endif %}" id="filter-empty">
+            <div class="card-body text-center py-5">
+                <div class="fs-1 mb-2">🔍</div>
+                <p class="mb-1 fw-semibold">Ningún parqueadero coincide con estos filtros ahora mismo.</p>
+                <p class="text-muted small mb-3">La disponibilidad cambia todo el tiempo: esta lista se actualiza sola.</p>
+                <a href="{% url 'home' %}#disponibilidad" class="btn btn-sm btn-outline-secondary" data-filter-reset>Ver todos</a>
+            </div>
+        </div>
+
         {% for item in parking_lots %}
-        <div class="card lot-card shadow-sm mb-3 {% if item.is_favorite %}is-favorite{% endif %} {% if item.lot.occupancy_status == 'full' %}border-danger{% endif %}"
+        <div class="card lot-card shadow-sm mb-3 {% if item.is_favorite %}is-favorite{% endif %} {% if item.lot.occupancy_status == 'full' %}border-danger{% endif %} {% if not item.matches_filter %}filtered-out{% endif %}"
              data-lot-card="{{ item.lot.id }}"
              data-lot-slug="{{ item.lot.slug }}"
+             data-status="{{ item.lot.occupancy_status }}"
+             data-available-car="{{ item.lot.available_cars }}"
+             data-available-motorcycle="{{ item.lot.available_motorcycles }}"
+             data-available-accessibility="{{ item.lot.available_accessibility }}"
              id="lot-card-{{ item.lot.slug }}">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
@@ -808,6 +934,13 @@ function applyLotState(lot, options = {}) {
     const card = document.querySelector(`[data-lot-card="${lot.id}"]`);
     if (!card) return;
 
+    // Datos que usa el filtro (FR12): si el estado cambia en vivo, la
+    // tarjeta entra o sale del filtro sola.
+    card.dataset.status = lot.occupancy_status;
+    card.dataset.availableCar = lot.available_cars;
+    card.dataset.availableMotorcycle = lot.available_motorcycles;
+    card.dataset.availableAccessibility = lot.available_accessibility;
+
     setFields(card, 'percentage', lot.occupancy_percentage);
     setFields(card, 'occupied', lot.occupied_spaces);
     setFields(card, 'available', lot.available_spaces);
@@ -879,6 +1012,7 @@ async function refreshLots({ highlight = false } = {}) {
         data.lots.forEach((lot) => applyLotState(lot, { highlight }));
         updateMapMarkers(data.lots);
         updateRecommendation(data.lots);
+        if (typeof applyFilters === 'function') applyFilters();
 
         const mapBadge = document.getElementById('map-updated-badge');
         if (mapBadge) mapBadge.textContent = 'Actualizado hace instantes';
@@ -1102,6 +1236,7 @@ document.addEventListener('click', (event) => {
     event.preventDefault();
     const target = document.querySelector(link.getAttribute('href'));
     if (target) {
+        if (typeof ensureCardVisible === 'function') ensureCardVisible(target);
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         target.classList.add('just-updated');
         setTimeout(() => target.classList.remove('just-updated'), 1400);
@@ -1118,6 +1253,122 @@ document.addEventListener('click', (event) => {
     }
     initMap(initialLots.filter((l) => l.latitude !== null && l.longitude !== null));
 })();
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// FILTROS (FR12) — estado + "con cupo para" tipo de vehículo
+//
+// Mismas reglas que core/filters.py (lot_matches). El servidor ya
+// entregó la página filtrada según la URL; aquí se cambia de filtro al
+// instante sin recargar, se actualizan los números de cada botón, se
+// atenúan en el mapa los parqueaderos que no pasan el filtro y la URL
+// queda con los filtros (se puede compartir o recargar sin perderlos).
+// ════════════════════════════════════════════════════════════════════
+const filterBar = document.getElementById('filter-bar');
+const filterState = {
+    estado: filterBar ? filterBar.dataset.initialEstado : '',
+    vehiculo: filterBar ? filterBar.dataset.initialVehiculo : '',
+};
+const AVAILABLE_KEY_BY_VEHICLE = {
+    car: 'availableCar',
+    motorcycle: 'availableMotorcycle',
+    accessibility: 'availableAccessibility',
+};
+
+function cardMatchesFilters(card) {
+    if (filterState.estado && card.dataset.status !== filterState.estado) return false;
+    if (filterState.vehiculo) {
+        const key = AVAILABLE_KEY_BY_VEHICLE[filterState.vehiculo];
+        if (!(Number(card.dataset[key]) > 0)) return false;
+    }
+    return true;
+}
+
+function filtersUrl() {
+    const params = new URLSearchParams(window.location.search);
+    ['estado', 'vehiculo'].forEach((key) => {
+        if (filterState[key]) params.set(key, filterState[key]);
+        else params.delete(key);
+    });
+    const query = params.toString();
+    return `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
+}
+
+function applyFilters({ updateUrl = false } = {}) {
+    if (!filterBar) return;
+
+    const cards = document.querySelectorAll('[data-lot-card]');
+    const counts = { all: cards.length, available: 0, limited: 0, full: 0 };
+    let visible = 0;
+
+    cards.forEach((card) => {
+        if (card.dataset.status in counts) counts[card.dataset.status] += 1;
+        const matches = cardMatchesFilters(card);
+        card.classList.toggle('filtered-out', !matches);
+        if (matches) visible += 1;
+
+        // En el mapa no se esconde: se atenúa, para no perder la referencia.
+        const marker = typeof mapMarkers !== 'undefined' ? mapMarkers[card.dataset.lotCard] : null;
+        if (marker) marker.setOpacity(matches ? 1 : 0.3);
+    });
+
+    document.querySelectorAll('[data-status-count]').forEach((el) => {
+        el.textContent = counts[el.dataset.statusCount] ?? 0;
+    });
+
+    document.querySelectorAll('.filter-chip').forEach((chip) => {
+        const active = filterState[chip.dataset.filterGroup] === chip.dataset.filterValue;
+        chip.classList.toggle('active', active);
+        chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+
+    document.getElementById('filter-visible-count').textContent = visible;
+    document.getElementById('filter-empty').classList.toggle('d-none', visible > 0);
+    document.getElementById('filter-clear').classList.toggle(
+        'd-none', !filterState.estado && !filterState.vehiculo
+    );
+
+    if (updateUrl) history.replaceState(null, '', filtersUrl());
+}
+
+function resetFilters() {
+    filterState.estado = '';
+    filterState.vehiculo = '';
+    applyFilters({ updateUrl: true });
+}
+
+/**
+ * Si alguien va a una tarjeta que el filtro tiene oculta (desde el
+ * buscador o el mapa), quitamos los filtros para poder mostrársela.
+ */
+function ensureCardVisible(card) {
+    if (card && card.classList.contains('filtered-out')) {
+        resetFilters();
+        showToast('Quitamos los filtros para mostrarte ese parqueadero.', 'info');
+    }
+}
+
+document.querySelectorAll('.filter-chip').forEach((chip) => {
+    chip.addEventListener('click', (event) => {
+        event.preventDefault();   // sin recargar: filtramos aquí mismo
+        const group = chip.dataset.filterGroup;
+        const value = chip.dataset.filterValue;
+        // Tocar un filtro que ya está activo lo quita (vuelve a "Todos").
+        filterState[group] = filterState[group] === value ? '' : value;
+        applyFilters({ updateUrl: true });
+    });
+});
+
+document.querySelectorAll('#filter-clear, [data-filter-reset]').forEach((el) => {
+    el.addEventListener('click', (event) => {
+        event.preventDefault();
+        resetFilters();
+    });
+});
+
+// Sincroniza el mapa y los contadores con el filtro que vino en la URL.
+applyFilters();
 </script>
 
 <script>
@@ -1211,6 +1462,7 @@ if (searchInput) {
         const card = document.getElementById(`lot-card-${btn.dataset.gotoLot}`);
         hideSearchResults();
         if (card) {
+            if (typeof ensureCardVisible === 'function') ensureCardVisible(card);
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
             card.classList.add('just-updated');
             setTimeout(() => card.classList.remove('just-updated'), 1600);

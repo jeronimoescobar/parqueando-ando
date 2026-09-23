@@ -20,13 +20,29 @@ Sprint 3 — actualización en vivo, búsqueda y favoritos:
                             no pierde el scroll ni lo que tenía abierto).
     search_api()          → búsqueda inteligente por nombre, apodo o intención.
     toggle_favorite_api() → marcar/desmarcar un parqueadero como favorito.
+    home() + lots_state_api() también filtran por estado y tipo de
+                            vehículo (FR12, ver core/filters.py).
+    parking_info_view()   → FR35, información general de los parqueaderos.
+
+El login/logout (FR2) está en core/auth_views.py.
 """
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
+from . import parking_info
 from .favorites import favorite_lot_ids, toggle_favorite
+from .filters import (
+    STATUS_OPTIONS,
+    VEHICLE_OPTIONS,
+    filter_parking_lots,
+    lot_matches,
+    parse_filters,
+    status_counts,
+)
 from .metro_status import get_metro_status, serialize_metro_status
 from .models import ParkingLot, ParkingSpot
 from .parking_recommendation import recommend_parking_lot
@@ -118,6 +134,13 @@ def home(request):
     lots = list(ParkingLot.objects.prefetch_related("spots", "notices"))
     favorite_ids = favorite_lot_ids(request)
 
+    # FR12: filtros ?estado=...&vehiculo=... Se aplican también aquí (no
+    # solo en JavaScript) para que un link filtrado llegue ya filtrado y
+    # para que funcione sin JavaScript. Todas las tarjetas se renderizan
+    # igual; las que no pasan el filtro quedan ocultas, así el JavaScript
+    # puede volver a mostrarlas al instante al cambiar de filtro.
+    filters = parse_filters(request.GET)
+
     parking_lots = []
     for lot in lots:
         parking_lots.append({
@@ -125,6 +148,7 @@ def home(request):
             "waiting_time": estimate_waiting_time(lot),
             "spots": lot.spots.all(),
             "is_favorite": lot.id in favorite_ids,
+            "matches_filter": lot_matches(lot, filters["status"], filters["vehicle"]),
         })
 
     # Los favoritos van primero: si alguien marcó "mi parqueadero de
@@ -132,6 +156,7 @@ def home(request):
     parking_lots.sort(key=lambda item: (not item["is_favorite"], item["lot"].name))
 
     metro_state = get_metro_status()
+    counts = status_counts(lots)
 
     context = {
         "parking_lots": parking_lots,
@@ -140,8 +165,47 @@ def home(request):
         "metro_status": serialize_metro_status(metro_state),
         "map_lots": [serialize_lot(lot, favorite_ids) for lot in lots if lot.has_coordinates],
         "has_favorites": bool(favorite_ids),
+        # FR12
+        "active_filters": filters,
+        "status_filter_options": _status_filter_options(filters, counts, len(lots)),
+        "vehicle_filter_options": _vehicle_filter_options(filters),
+        "visible_lots_count": sum(1 for item in parking_lots if item["matches_filter"]),
     }
     return render(request, "core/home.html", context)
+
+
+# ── FR12: botones de filtro del home ──────────────────────────────────────────
+
+
+def _filter_href(status, vehicle):
+    """Link del home con esos filtros (los vacíos no se ponen en la URL)."""
+    params = {key: value for key, value in (("estado", status), ("vehiculo", vehicle)) if value}
+    query = f"?{urlencode(params)}" if params else ""
+    return f"{reverse('home')}{query}#disponibilidad"
+
+
+def _status_filter_options(filters, counts, total):
+    options = [{"value": "", "label": "Todos", "count": total}]
+    options += [
+        {"value": value, "label": label, "count": counts[value]}
+        for value, label in STATUS_OPTIONS
+    ]
+    for opt in options:
+        opt["active"] = (opt["value"] or None) == filters["status"]
+        opt["href"] = _filter_href(opt["value"], filters["vehicle"])
+    return options
+
+
+def _vehicle_filter_options(filters):
+    options = [{"value": "", "label": "Cualquiera", "icon": ""}]
+    options += [
+        {"value": value, "label": label, "icon": icon}
+        for value, label, icon in VEHICLE_OPTIONS
+    ]
+    for opt in options:
+        opt["active"] = (opt["value"] or None) == filters["vehicle"]
+        opt["href"] = _filter_href(filters["status"], opt["value"])
+    return options
 
 
 def metro_status_api(request):
@@ -171,12 +235,49 @@ def lots_state_api(request):
     comienzo de la página cada vez que reporto algo".
     """
     favorite_ids = favorite_lot_ids(request)
-    lots = ParkingLot.objects.prefetch_related("spots", "notices")
+    lots = list(ParkingLot.objects.prefetch_related("spots", "notices"))
+
+    # FR12: la API acepta los mismos filtros que el home
+    # (/api/lots/?estado=available&vehiculo=motorcycle). Sin parámetros
+    # devuelve todos, que es lo que usa el refresco en vivo del home.
+    filters = parse_filters(request.GET)
+    lots = filter_parking_lots(lots, filters["status"], filters["vehicle"])
 
     return JsonResponse({
         "ok": True,
+        "filters": filters,
         "lots": [serialize_lot(lot, favorite_ids) for lot in lots],
     })
+
+
+# ── FR35: información general de los parqueaderos ────────────────────────────
+
+
+def parking_info_view(request):
+    """
+    FR35 – University parking information.
+
+    Página con la información general de los parqueaderos de EAFIT:
+    horarios (con indicador de abierto/cerrado ahora), tarifas, dónde
+    pagar, cómo entrar, normas y contacto. El contenido vive en
+    core/parking_info.py para poder actualizarlo sin tocar el HTML.
+    Al lado de cada horario se muestra la disponibilidad en vivo del
+    parqueadero correspondiente.
+    """
+    lots_by_slug = {lot.slug: lot for lot in ParkingLot.objects.all()}
+
+    context = {
+        "lots_info": parking_info.lots_with_status(lots_by_slug),
+        "rates": parking_info.RATES,
+        "payment_points": parking_info.PAYMENT_POINTS,
+        "online_payment_note": parking_info.ONLINE_PAYMENT_NOTE,
+        "entry_options": parking_info.ENTRY_OPTIONS,
+        "grace_period_note": parking_info.GRACE_PERIOD_NOTE,
+        "rules": parking_info.RULES,
+        "contacts": parking_info.CONTACTS,
+        "source_url": parking_info.SOURCE_URL,
+    }
+    return render(request, "core/parking_info.html", context)
 
 
 def search_api(request):

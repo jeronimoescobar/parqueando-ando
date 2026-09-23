@@ -26,6 +26,9 @@ coordenadas y sus apodos de búsqueda.
 | Ruta | Qué es | Acceso |
 |---|---|---|
 | `/` | Home: buscador, mapa, disponibilidad, plano interactivo, reportes | Público |
+| `/?estado=...&vehiculo=...` | Home filtrado (FR12): `estado` = `available`/`limited`/`full`, `vehiculo` = `car`/`motorcycle`/`accessibility` | Público |
+| `/informacion/` | Información general de los parqueaderos (FR35): horarios, tarifas, pagos, normas, contacto | Público |
+| `/accounts/login/` | Iniciar sesión (FR2). Staff → dashboard, resto → home | Público |
 | `/parking/<slug>/` | Detalle de un parqueadero | Público |
 | `/dashboard/` | Panel de administrador | Solo staff |
 | `/dashboard/mapper/<slug>/` | Mapeador visual del plano | Solo staff |
@@ -72,22 +75,25 @@ se editan desde `/admin/` → campo "Otros nombres", sin tocar código.
 **Favoritos.** Se pueden marcar con la estrella de cada tarjeta y aparecen de
 primeros. Ver abajo cómo conectarlos al login.
 
-## Para quien implemente usuarios y login
+## Login (FR2) y favoritos
 
-Los favoritos ya están preparados para cuentas, pero funcionan sin ellas: hoy se
-guardan por sesión del navegador. Cuando el login esté listo, agrega **una línea**
-después de autenticar:
+El login (FR2) ya está en `/accounts/login/` y funciona con cualquier usuario
+que exista (creado desde `/admin/`, `createsuperuser` o el futuro registro).
+Después de entrar, el staff va al dashboard y el resto al home.
+
+Los favoritos que la persona marcó antes de iniciar sesión pasan solos a su
+cuenta. Si el registro quiere dejar a la persona logueada al terminar, que use:
 
 ```python
-from core.favorites import attach_session_favorites_to_user
+from core.auth_views import log_user_in
 
-login(request, user)
-attach_session_favorites_to_user(request, user)   # <-- esto
+log_user_in(request, user)   # en vez de login(request, user)
 ```
 
-Con eso, los favoritos que la persona marcó antes de tener cuenta pasan a su
-cuenta, sin duplicados. No hay que tocar el modelo ni las vistas: ya detectan
-solas si hay usuario logueado. El detalle está en `core/favorites.py`.
+(No uses `login()` + `attach_session_favorites_to_user()` a secas: `login()`
+cambia la clave de sesión y los favoritos no se encontrarían.) Si el registro
+tiene una URL llamada `register`, el formulario de login muestra solo el link
+"Regístrate".
 
 ## Cómo montar el plano de un parqueadero
 
@@ -99,7 +105,9 @@ solas si hay usuario logueado. El detalle está en `core/favorites.py`.
 ## Estructura del proyecto
 
 - `core/` — modelos, vistas públicas y APIs, búsqueda (`search.py`), favoritos
-  (`favorites.py`), scraping del Metro (`metro_status.py`).
+  (`favorites.py`), scraping del Metro (`metro_status.py`), login/logout
+  (`auth_views.py`, FR2), filtros (`filters.py`, FR12) e información general de
+  los parqueaderos (`parking_info.py`, FR35 — tarifas, horarios, etc. se editan ahí).
 - `reports/` — reportes de usuarios (espacio disponible/ocupado/información incorrecta).
 - `administration/` — dashboard, mapeador visual del plano, gestión de reportes, y `/admin/`.
 

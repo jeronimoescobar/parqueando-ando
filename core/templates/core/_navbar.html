@@ -1,0 +1,48 @@
+{% comment %}
+    Barra superior compartida por las páginas públicas (home e información).
+    Uso: {% include "core/_navbar.html" with active="home" %}
+    FR2  – muestra "Iniciar sesión" o el usuario + "Cerrar sesión".
+    FR35 – link a la página de información general de los parqueaderos.
+{% endcomment %}
+<nav class="navbar navbar-expand bg-white border-bottom shadow-sm">
+    <div class="container flex-wrap gap-2">
+        <a class="navbar-brand fw-semibold" href="{% url 'home' %}">🅿️ Parqueando Ando</a>
+
+        <div class="d-flex align-items-center gap-2 ms-auto flex-wrap justify-content-end">
+            <a href="{% url 'home' %}"
+               class="btn btn-sm {% if active == 'home' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Disponibilidad
+            </a>
+            <a href="{% url 'parking_info' %}"
+               class="btn btn-sm {% if active == 'info' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                ℹ️ Información
+            </a>
+
+            {% if user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn btn-sm btn-light border dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    👤 {{ user.get_short_name|default:user.get_username }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li><span class="dropdown-item-text small text-muted">Sesión: {{ user.get_username }}</span></li>
+                    {% if user.is_staff %}
+                    <li><a class="dropdown-item" href="{% url 'dashboard' %}">🛠️ Panel de administración</a></li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form action="{% url 'logout' %}" method="post" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item text-danger">Cerrar sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+            {% else %}
+            <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}" class="btn btn-sm btn-dark">
+                Iniciar sesión
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
