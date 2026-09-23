@@ -385,3 +385,19 @@ class FavoriteParkingLot(models.Model):
     def __str__(self):
         owner = self.user or f"sesión {self.session_key[:8]}"
         return f"{owner} ♥ {self.lot.name}"
+
+class ParkingRule(models.Model):
+    """
+    Reglas y restricciones específicas para los parqueaderos (FR29).
+    Ejemplo: Pico y placa, tarifas, reglas de pernoctada, etc.
+    """
+    lot = models.ForeignKey(ParkingLot, on_delete=models.CASCADE, related_name="rules")
+    description = models.TextField(help_text="Descripción de la regla")
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "Regla de parqueadero"
+        verbose_name_plural = "Reglas de parqueaderos"
+
+    def __str__(self):
+        return f"{self.lot.name} - Regla {self.id}"

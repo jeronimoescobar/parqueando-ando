@@ -385,3 +385,7 @@ def update_spot_status(request, slug, spot_id):
             "status_display": spot.get_status_display(),
         })
     return redirect("parking_detail", slug=slug)
+
+
+def general_rules(request):
+    return render(request, 'core/general_rules.html')

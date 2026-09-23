@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reglamento General - Parqueando Ando</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .info-hero {
+            background: linear-gradient(135deg, #0d6efd 0%, #3d8bfd 100%);
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<header class="info-hero py-5">
+    <div class="container">
+        <h1 class="display-6 fw-semibold mb-2">Reglamento General de Parqueaderos</h1>
+        <p class="lead mb-0 opacity-75">Normativas, restricciones y deberes para el uso de los espacios de estacionamiento en el campus EAFIT.</p>
+    </div>
+</header>
+
+<div class="container py-4">
+    <a href="{% url 'home' %}" class="btn btn-primary mb-4">&larr; Volver</a>
+
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-5 text-secondary">
+                    <h4 class="text-dark mb-3">1. Reglas generales de uso</h4>
+                    <p>El uso de los parqueaderos de EAFIT implica el cumplimiento de las normas establecidas por la Universidad y de las indicaciones dadas por el personal de seguridad.</p>
+                    <ul>
+                        <li>Todos los vehículos deben cumplir la normativa colombiana vigente.</li>
+                        <li>Los vehículos deben permanecer dentro de las celdas habilitadas y destinadas para cada tipo de vehículo.</li>
+                        <li>Los peatones tienen prioridad dentro de las instalaciones.</li>
+                        <li>Los vehículos deben mantener activados sus mecanismos de seguridad al ser estacionados.</li>
+                        <li>Una vez se levante la talanquera de ingreso o salida, el vehículo debe continuar inmediatamente su marcha.</li>
+                        <li>La velocidad máxima dentro de las instalaciones es de <strong>10 km/h</strong>.</li>
+                        <li>Están prohibidas las maniobras acrobáticas o inseguras.</li>
+                        <li>Está prohibido utilizar dispositivos móviles mientras se conduce.</li>
+                        <li>El cinturón de seguridad es obligatorio para los ocupantes de los vehículos y el casco es obligatorio para los motociclistas.</li>
+                        <li>Todos los vehículos deben estacionarse en reversa, quedar completamente cerrados y con el sistema de seguridad activado.</li>
+                    </ul>
+                    
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">2. Ingreso y salida vehicular</h4>
+                    <p>El ingreso vehicular a EAFIT se realiza mediante mecanismos de identificación establecidos por la Universidad.</p>
+                    <ul>
+                        <li>El personal carnetizado puede ingresar utilizando su carné.</li>
+                        <li>El sistema también puede utilizar la lectura de placas (LPR) para usuarios carnetizados que tengan su placa registrada.</li>
+                        <li>Los visitantes pueden ingresar utilizando un tiquete de parqueadero.</li>
+                        <li>El sistema verifica que el vehículo haya realizado previamente la salida correspondiente antes de permitir un nuevo ingreso en la misma zona.</li>
+                        <li>El carné y el tiquete son de uso personal e intransferible.</li>
+                        <li>Las placas registradas mediante LPR deben estar asociadas a un usuario carnetizado.</li>
+                        <li>La lectura de placas puede verse afectada por factores como suciedad, lluvia, iluminación u obstáculos; en estos casos puede utilizarse el carné como método alternativo.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">3. Ingreso de visitantes</h4>
+                    <p>Las personas que no cuenten con un carné institucional activo pueden ingresar como visitantes siguiendo el procedimiento establecido por la Universidad.</p>
+                    <ul>
+                        <li>Para ingresar en vehículo, el visitante debe solicitar un tiquete en la lectora vehicular.</li>
+                        <li>El tiquete contiene un código de barras que se utiliza para realizar el pago y posteriormente efectuar la salida.</li>
+                        <li>Durante el ingreso se registra información del vehículo, incluyendo placa y ocupantes.</li>
+                        <li>El tiquete debe conservarse durante toda la permanencia en la Universidad.</li>
+                        <li>Una vez realizado el pago, el visitante dispone de <strong>30 minutos para salir</strong>.</li>
+                        <li>El tiquete es válido únicamente para el vehículo que lo utilizó inicialmente.</li>
+                        <li>La evasión o intento de evasión del pago puede generar medidas administrativas, disciplinarias o legales.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">4. Pago del servicio de parqueadero</h4>
+                    <p>El servicio de parqueadero tiene un costo que depende del tipo de usuario y de las tarifas vigentes establecidas por la Universidad.</p>
+                    <ul>
+                        <li>El pago puede realizarse mediante el carné institucional, lectura de placa o tiquete de parqueadero para visitantes.</li>
+                        <li>Las tarifas, periodos de cobro y modificaciones son informados por EAFIT a través de sus canales oficiales.</li>
+                        <li>Los usuarios son responsables de contar con saldo o recursos suficientes para pagar el servicio.</li>
+                        <li>La comunidad general cuenta con un tiempo de gracia de <strong>30 minutos</strong>.</li>
+                        <li>Los vehículos de proveedores cuentan con un tiempo de gracia de <strong>60 minutos</strong>.</li>
+                        <li>Los vehículos que permanezcan durante la noche deben pagar el valor correspondiente a cada día de uso.</li>
+                        <li>Los domingos y festivos el servicio de parqueadero es gratuito, según el reglamento vigente.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">5. Exenciones de pago</h4>
+                    <p>Algunos usuarios y vehículos pueden estar exentos del pago del servicio de parqueadero de acuerdo con las políticas vigentes de EAFIT.</p>
+                    <ul>
+                        <li>Los vehículos <strong>100 % eléctricos</strong> están exentos del pago del parqueadero.</li>
+                        <li>Los vehículos eléctricos deben utilizar las celdas señalizadas para este tipo de vehículos cuando corresponda.</li>
+                        <li>El personal que tenga una exención de pago debe utilizar principalmente el parqueadero de <strong>Parque Los Guayabos</strong>.</li>
+                        <li>En el Campus Principal, los usuarios exentos solo pueden utilizar las celdas correspondientes cuando se encuentren dentro de las excepciones establecidas por la Universidad.</li>
+                        <li>El préstamo de un carné con beneficio de exención puede ocasionar la pérdida de dicho beneficio.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">6. Uso de las celdas de parqueo</h4>
+                    <p>Los vehículos deben utilizar únicamente los espacios destinados y señalizados para su tipo y condición.</p>
+                    <ul>
+                        <li>Las celdas deben utilizarse de acuerdo con su señalización.</li>
+                        <li>Está prohibido ocupar sin autorización las celdas destinadas a personas con movilidad reducida.</li>
+                        <li>Las celdas destinadas a proveedores deben respetarse y no pueden utilizarse sin autorización.</li>
+                        <li>También deben respetarse las celdas reservadas para actividades o eventos.</li>
+                        <li>Está prohibido utilizar dos o más celdas innecesariamente con un solo vehículo.</li>
+                        <li>Está prohibido estacionar en zonas de circulación o vías perimetrales.</li>
+                        <li>Los vehículos deben estacionarse completamente dentro de la celda correspondiente.</li>
+                        <li>Las personas con movilidad reducida tienen una excepción frente a la medida de Pico y Placa según las condiciones establecidas por la normativa vigente.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">7. Pico y Placa</h4>
+                    <p>EAFIT aplica las restricciones de Pico y Placa establecidas por las autoridades correspondientes para el municipio de Medellín.</p>
+                    <ul>
+                        <li>El acceso vehicular está sujeto a la numeración de las placas, las exenciones y las condiciones establecidas por la Alcaldía de Medellín.</li>
+                        <li>La medida se aplica durante todo el día dentro de las instalaciones donde corresponda.</li>
+                        <li>Las personas con movilidad reducida están exentas de Pico y Placa según las condiciones establecidas.</li>
+                        <li><strong>En EAFIT Llanogrande no aplica la medida de Pico y Placa.</strong></li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">8. Vehículos eléctricos</h4>
+                    <p>EAFIT dispone de espacios y estaciones de carga destinados a vehículos eléctricos.</p>
+                    <ul>
+                        <li>Los vehículos eléctricos pueden utilizar las celdas generales y también las celdas señalizadas específicamente para vehículos eléctricos.</li>
+                        <li>Las estaciones de carga deben utilizarse únicamente para el tipo de vehículo correspondiente.</li>
+                        <li>Está prohibido desconectar un vehículo que se encuentre conectado para conectar otro.</li>
+                        <li>Está prohibido manipular tableros, circuitos o redes eléctricas de la Universidad sin autorización.</li>
+                        <li>Las fallas en las estaciones de carga deben ser reportadas al Departamento de Gestión del Campus.</li>
+                        <li>El usuario es responsable de utilizar correctamente sus propios cables y elementos de carga.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">9. Seguridad y comportamiento</h4>
+                    <p>El comportamiento de los conductores dentro de los parqueaderos debe garantizar la seguridad de las personas y de los demás vehículos.</p>
+                    <ul>
+                        <li>Está prohibido conducir de manera insegura o realizar maniobras peligrosas.</li>
+                        <li>Está prohibido utilizar teléfonos u otros dispositivos móviles mientras se conduce.</li>
+                        <li>Está prohibido hacer uso innecesario de la bocina.</li>
+                        <li>No se permite utilizar equipos de sonido a niveles que interrumpan las actividades académicas o administrativas sin autorización.</li>
+                        <li>Los conductores deben seguir las instrucciones del personal de seguridad.</li>
+                        <li>En caso de una colisión, si las partes no llegan a un acuerdo, se debe solicitar la intervención de las autoridades de tránsito.</li>
+                        <li>No está permitido entregar las llaves del vehículo al personal de seguridad.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">10. Objetos dentro del vehículo</h4>
+                    <p>Los usuarios son responsables de los objetos personales que dejen dentro de sus vehículos.</p>
+                    <ul>
+                        <li>EAFIT no asume la custodia de objetos personales dejados dentro de los vehículos.</li>
+                        <li>Se recomienda retirar del vehículo objetos como computadores, teléfonos, bolsos, billeteras, dinero, joyas, equipos electrónicos, cámaras, llaves y otros elementos de valor.</li>
+                        <li>El usuario asume el riesgo relacionado con la pérdida, daño o deterioro de estos elementos.</li>
+                        <li>Antes de abandonar el vehículo, los objetos personales deben ser retirados o guardados de manera segura.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">11. Pernoctación y ocupación de los parqueaderos</h4>
+                    <p>Existen condiciones especiales para los vehículos que permanezcan en los parqueaderos durante la noche y para los momentos en que se alcance la capacidad máxima.</p>
+                    <ul>
+                        <li>Los vehículos que permanezcan durante la noche requieren autorización previa del Coordinador de Seguridad.</li>
+                        <li>Los vehículos que pernocten sin autorización podrán ser reportados a las autoridades competentes para su retiro.</li>
+                        <li>El usuario debe pagar el servicio correspondiente por cada día de permanencia.</li>
+                        <li>Cuando un parqueadero alcanza su capacidad máxima, se restringe el ingreso de nuevos vehículos.</li>
+                        <li>El ingreso se habilita nuevamente a medida que se liberen celdas.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">12. Reporte de daños y robos</h4>
+                    <p>Las novedades relacionadas con daños, robos o incidentes dentro de los parqueaderos deben ser reportadas oportunamente.</p>
+                    <ul>
+                        <li>El usuario debe informar la situación al personal de seguridad más cercano.</li>
+                        <li>También puede comunicarse con las líneas de atención establecidas por EAFIT.</li>
+                        <li>El afectado debe proporcionar información como hora de ingreso, lugar de parqueo y características del vehículo.</li>
+                        <li>EAFIT puede realizar verificaciones mediante los sistemas de videovigilancia disponibles.</li>
+                        <li>Los reclamos relacionados con el servicio deben realizarse antes de retirar el vehículo de las instalaciones.</li>
+                        <li>El usuario debe asumir los daños que ocasione a personas, instalaciones u otros vehículos cuando corresponda.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <h4 class="text-dark mb-3">13. Prohibiciones y sanciones</h4>
+                    <p>El incumplimiento de las normas de parqueadero puede generar la suspensión temporal o indefinida del servicio y otras medidas administrativas, disciplinarias o legales.</p>
+                    <p>Entre las conductas que pueden generar sanciones se encuentran:</p>
+                    <ul>
+                        <li>Exceder la velocidad máxima permitida.</li>
+                        <li>No estacionar el vehículo en reversa.</li>
+                        <li>No utilizar cinturón de seguridad o casco correctamente.</li>
+                        <li>Utilizar dispositivos móviles mientras se conduce.</li>
+                        <li>Incumplir la medida de Pico y Placa.</li>
+                        <li>Ocupar sin autorización celdas destinadas a personas con movilidad reducida.</li>
+                        <li>Ocupar celdas reservadas o destinadas a proveedores sin autorización.</li>
+                        <li>Estacionar en zonas de circulación o áreas no habilitadas.</li>
+                        <li>Utilizar un carné o tiquete prestado.</li>
+                        <li>Evadir los controles de acceso o el pago del servicio.</li>
+                        <li>Presentar tiquetes falsos o adulterados.</li>
+                        <li>Realizar trabajos de mecánica dentro del parqueadero.</li>
+                        <li>Manipular indebidamente las estaciones de carga de vehículos eléctricos.</li>
+                    </ul>
+
+                    <hr class="my-4">
+
+                    <div class="alert alert-light border shadow-sm p-4 mt-5">
+                        <h5 class="alert-heading text-primary"><i class="bi bi-info-circle"></i> Fuente del reglamento</h5>
+                        <p class="mb-0 small text-muted">Las normas presentadas en esta sección son una síntesis del reglamento oficial de ingreso peatonal y vehicular de la Universidad EAFIT. Para consultar la reglamentación completa y sus posibles actualizaciones, se debe acudir a la fuente oficial de la Universidad.<br><br>
+                        <strong>Fuente:</strong> Universidad EAFIT — Reglamento de ingreso peatonal y vehicular.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+</body>
+</html>

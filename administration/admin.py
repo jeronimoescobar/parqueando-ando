@@ -10,7 +10,7 @@ cambia en qué archivo vive el código.
 
 from django.contrib import admin
 
-from core.models import FavoriteParkingLot, ParkingLot, ParkingLotNotice, ParkingSpot
+from core.models import FavoriteParkingLot, ParkingLot, ParkingLotNotice, ParkingSpot, ParkingRule
 
 
 class ParkingSpotInline(admin.TabularInline):
@@ -47,6 +47,16 @@ class ParkingLotNoticeInline(admin.TabularInline):
     readonly_fields = ("created_at",)
 
 
+class ParkingRuleInline(admin.StackedInline):
+    """
+    FR29 — Parking rules.
+    Aquí el administrador escribe las reglas específicas aplicables a cada
+    parqueadero (ej. tarifas, restricciones de acceso).
+    """
+    model = ParkingRule
+    extra = 1
+
+
 @admin.register(ParkingLot)
 class ParkingLotAdmin(admin.ModelAdmin):
     """
@@ -63,7 +73,7 @@ class ParkingLotAdmin(admin.ModelAdmin):
     list_display = ('name', 'total_capacity', 'occupied_spaces', 'last_updated')
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ('last_updated',)
-    inlines = [ParkingSpotInline, ParkingLotNoticeInline]
+    inlines = [ParkingSpotInline, ParkingLotNoticeInline, ParkingRuleInline]
 
     fieldsets = (
         ("Información general", {
