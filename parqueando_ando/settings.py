@@ -140,3 +140,9 @@ LOGOUT_REDIRECT_URL = 'home'
 # esto solo declara ese mismo tipo como default para cualquier modelo
 # nuevo que no especifique su propio primary_key.
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
