@@ -7,6 +7,9 @@ misma sesión de Django).
 """
 
 from django.contrib import messages
+from django.db.models import Count
+from django.utils.dateparse import parse_date
+from datetime import datetime, time
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -155,6 +158,76 @@ def mapper_delete_spot(request, slug, spot_id):
     spot = get_object_or_404(ParkingSpot, id=spot_id, lot__slug=slug)
     spot.delete()
     return JsonResponse({"ok": True})
+
+
+# ── FR18: reportes y estadísticas ─────────────────────────────────────────────
+
+
+@staff_member_required
+def reports_statistics(request):
+    """
+    FR18 – Reports and statistics.
+
+    Presenta al administrador un resumen de ocupación de los parqueaderos y
+    de los reportes enviados por los usuarios, con filtro opcional por rango
+    de fechas. No modifica datos: solo agrega información existente.
+    """
+    date_from_raw = request.GET.get("from", "")
+    date_to_raw = request.GET.get("to", "")
+
+    reports_qs = ParkingReport.objects.select_related("lot")
+    date_from = parse_date(date_from_raw) if date_from_raw else None
+    date_to = parse_date(date_to_raw) if date_to_raw else None
+    if date_from:
+        reports_qs = reports_qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        reports_qs = reports_qs.filter(created_at__date__lte=date_to)
+
+    status_counts = {
+        value: reports_qs.filter(status=value).count()
+        for value, _ in ParkingReport.STATUS_CHOICES
+    }
+    type_counts = [
+        {
+            "label": label,
+            "value": reports_qs.filter(report_type=value).count(),
+        }
+        for value, label in ParkingReport.REPORT_TYPES
+    ]
+
+    lot_report_counts = list(
+        reports_qs.values("lot__name")
+        .annotate(total=Count("id"))
+        .order_by("-total", "lot__name")
+    )
+
+    lots = list(ParkingLot.objects.all())
+    total_capacity = sum(lot.total_capacity for lot in lots)
+    total_occupied = sum(lot.occupied_spaces for lot in lots)
+    total_available = sum(lot.available_spaces for lot in lots)
+    occupancy_percentage = round((total_occupied / total_capacity) * 100, 1) if total_capacity else 0
+
+    lot_statistics = []
+    for lot in lots:
+        lot_statistics.append({
+            "lot": lot,
+            "report_count": next((x["total"] for x in lot_report_counts if x["lot__name"] == lot.name), 0),
+        })
+
+    context = {
+        "reports_total": reports_qs.count(),
+        "status_counts": status_counts,
+        "type_counts": type_counts,
+        "lot_report_counts": lot_report_counts,
+        "lots": lot_statistics,
+        "total_capacity": total_capacity,
+        "total_occupied": total_occupied,
+        "total_available": total_available,
+        "occupancy_percentage": occupancy_percentage,
+        "date_from": date_from_raw,
+        "date_to": date_to_raw,
+    }
+    return render(request, "administration/reports_statistics.html", context)
 
 
 # ── Gestión de reportes (FR32, FR34) ────────────────────────────────────────────

@@ -29,6 +29,9 @@ coordenadas y sus apodos de búsqueda.
 | `/?estado=...&vehiculo=...` | Home filtrado (FR12): `estado` = `available`/`limited`/`full`, `vehiculo` = `car`/`motorcycle`/`accessibility` | Público |
 | `/informacion/` | Información general de los parqueaderos (FR35): horarios, tarifas, pagos, normas, contacto | Público |
 | `/accounts/login/` | Iniciar sesión (FR2). Staff → dashboard, resto → home | Público |
+| `/accounts/profile/` | Perfil de usuario (FR3): editar datos y contraseña | Solo usuarios |
+| `/api/notifications/` | Notificaciones de disponibilidad (FR14) | Solo usuarios |
+| `/dashboard/statistics/` | Reportes y estadísticas (FR18) | Solo staff |
 | `/parking/<slug>/` | Detalle de un parqueadero | Público |
 | `/dashboard/` | Panel de administrador | Solo staff |
 | `/dashboard/mapper/<slug>/` | Mapeador visual del plano | Solo staff |

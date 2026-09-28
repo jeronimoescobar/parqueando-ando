@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes y estadísticas · Parqueando Ando</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1">📊 Reportes y estadísticas</span>
+        <div class="d-flex gap-2">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm">Panel</a>
+            <a href="{% url 'reports_management' %}" class="btn btn-outline-light btn-sm">Gestionar reportes</a>
+            <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Sitio público</a>
+        </div>
+    </div>
+</nav>
+
+<main class="container pb-5">
+    <div class="mb-4">
+        <h1 class="h3 mb-1">FR18 · Reports and statistics</h1>
+        <p class="text-muted mb-0">Resumen de ocupación y de los reportes realizados por los usuarios.</p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label" for="date-from">Desde</label>
+                    <input id="date-from" type="date" name="from" value="{{ date_from }}" class="form-control">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label" for="date-to">Hasta</label>
+                    <input id="date-to" type="date" name="to" value="{{ date_to }}" class="form-control">
+                </div>
+                <div class="col-12 col-md-4 d-flex gap-2">
+                    <button class="btn btn-primary" type="submit">Filtrar</button>
+                    <a href="{% url 'reports_statistics' %}" class="btn btn-outline-secondary">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Reportes</small><div class="display-6">{{ reports_total }}</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Cupos totales</small><div class="display-6">{{ total_capacity }}</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Ocupados</small><div class="display-6">{{ total_occupied }}</div></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Disponibles</small><div class="display-6">{{ total_available }}</div></div></div></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5">Estado de los reportes</h2>
+                    {% for label, value in status_counts.items %}
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>{{ label|title }}</span><strong>{{ value }}</strong>
+                    </div>
+                    {% endfor %}
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small text-muted"><span>Ocupación general</span><span>{{ occupancy_percentage }}%</span></div>
+                        <div class="progress" style="height: 10px;"><div class="progress-bar" style="width: {{ occupancy_percentage }}%"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h5">Reportes por tipo</h2>
+                    {% for item in type_counts %}
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                        <span>{{ item.label }}</span><strong>{{ item.value }}</strong>
+                    </div>
+                    {% empty %}<p class="text-muted">No hay datos.</p>{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Estadísticas por parqueadero</h2>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead><tr><th>Parqueadero</th><th>Ocupación</th><th>Disponibles</th><th>Reportes</th><th>Estado</th></tr></thead>
+                            <tbody>
+                            {% for item in lots %}
+                                <tr>
+                                    <td class="fw-semibold">{{ item.lot.name }}</td>
+                                    <td style="min-width: 180px;">
+                                        <div class="d-flex justify-content-between small"><span>{{ item.lot.occupied_spaces }}/{{ item.lot.total_capacity }}</span><span>{{ item.lot.occupancy_percentage }}%</span></div>
+                                        <div class="progress" style="height: 7px;"><div class="progress-bar" style="width: {{ item.lot.occupancy_percentage_css }}%"></div></div>
+                                    </td>
+                                    <td>{{ item.lot.available_spaces }}</td>
+                                    <td>{{ item.report_count }}</td>
+                                    <td><span class="badge {% if item.lot.occupancy_status == 'available' %}text-bg-success{% elif item.lot.occupancy_status == 'limited' %}text-bg-warning{% else %}text-bg-danger{% endif %}">{{ item.lot.occupancy_status_display }}</span></td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-muted">No hay parqueaderos registrados.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

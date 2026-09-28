@@ -1,7 +1,10 @@
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.views import LoginView, LogoutView
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, ProfileUpdateForm
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView
@@ -58,3 +61,44 @@ class UserRegisterView(CreateView):
         
         messages.success(self.request, f"¡Bienvenido a Parqueando Ando, {user.username}! Tu cuenta ha sido creada.")
         return HttpResponseRedirect(self.get_success_url())
+
+
+@login_required
+def profile(request):
+    """FR3 – Visualizar y actualizar el perfil del usuario."""
+    if request.method == "POST":
+        form = ProfileUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Tu perfil se actualizó correctamente.")
+            return HttpResponseRedirect(reverse("accounts:profile"))
+    else:
+        form = ProfileUpdateForm(instance=request.user)
+
+    password_form = PasswordChangeForm(request.user)
+    return render_profile(request, form, password_form)
+
+
+@login_required
+def change_password(request):
+    """FR3 – Cambiar la contraseña sin cerrar la sesión actual."""
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "Tu contraseña se cambió correctamente.")
+            return HttpResponseRedirect(reverse("accounts:profile"))
+    else:
+        form = PasswordChangeForm(request.user)
+
+    profile_form = ProfileUpdateForm(instance=request.user)
+    return render_profile(request, profile_form, form)
+
+
+def render_profile(request, form, password_form):
+    from django.shortcuts import render
+    return render(request, "accounts/profile.html", {
+        "form": form,
+        "password_form": password_form,
+    })
