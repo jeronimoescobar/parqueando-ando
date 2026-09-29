@@ -401,3 +401,34 @@ class ParkingRule(models.Model):
 
     def __str__(self):
         return f"{self.lot.name} - Regla {self.id}"
+
+class ParkingNotificationSubscription(models.Model):
+    """
+    FR14 – Suscripción a notificaciones de disponibilidad.
+
+    Un usuario puede activar una alerta para un parqueadero. La aplicación
+    usa esta preferencia para mostrar un aviso cuando el parqueadero tiene
+    cupos disponibles; la suscripción permanece asociada a la cuenta.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="parking_notification_subscriptions",
+    )
+    lot = models.ForeignKey(
+        ParkingLot,
+        on_delete=models.CASCADE,
+        related_name="notification_subscriptions",
+    )
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Suscripción de notificación de parqueadero"
+        verbose_name_plural = "Suscripciones de notificaciones de parqueadero"
+        constraints = [
+            models.UniqueConstraint(fields=["user", "lot"], name="unique_notification_subscription"),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} → {self.lot.name}"

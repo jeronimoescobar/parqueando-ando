@@ -12,6 +12,9 @@
         <div class="container">
             <span class="navbar-brand mb-0 h1">🅿️ Panel de administración</span>
             <div class="d-flex gap-2">
+                <a href="{% url 'reports_statistics' %}" class="btn btn-outline-light btn-sm">
+                    📊 Estadísticas
+                </a>
                 <a href="{% url 'reports_management' %}" class="btn btn-outline-light btn-sm">
                     🚩 Gestionar reportes
                     {% if pending_reports_count %}

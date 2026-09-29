@@ -33,6 +33,7 @@ urlpatterns = [
 
     # FR32, FR34 — gestión de reportes desde el dashboard (además de /admin/)
     path("reports/", views.reports_management, name="reports_management"),
+    path("statistics/", views.reports_statistics, name="reports_statistics"),
     path("reports/<int:report_id>/status/", views.report_set_status, name="report_set_status"),
     path("reports/<int:report_id>/delete/", views.report_delete, name="report_delete"),
     path("reports/delete-invalid/", views.reports_delete_all_invalid, name="reports_delete_all_invalid"),

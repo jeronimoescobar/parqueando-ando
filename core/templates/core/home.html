@@ -447,6 +447,19 @@
                             {% if item.is_favorite %}★{% else %}☆{% endif %}
                         </button>
                         <span>{{ item.lot.name }}</span>
+                        {% if user.is_authenticated %}
+                        <button type="button"
+                                class="btn btn-sm {% if item.notifications_enabled %}btn-warning{% else %}btn-outline-secondary{% endif %} ms-1"
+                                data-notification-toggle="{{ item.lot.id }}"
+                                aria-pressed="{% if item.notifications_enabled %}true{% else %}false{% endif %}"
+                                title="{% if item.notifications_enabled %}Desactivar notificaciones{% else %}Avisarme cuando haya cupos{% endif %}">
+                            {% if item.notifications_enabled %}🔔{% else %}🔕{% endif %}
+                        </button>
+                        {% else %}
+                        <a class="btn btn-sm btn-outline-secondary ms-1"
+                           href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}"
+                           title="Inicia sesión para activar notificaciones">🔕</a>
+                        {% endif %}
                     </h3>
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge
@@ -881,6 +894,7 @@ const URLS = {
     lotsState: "{% url 'lots_state_api' %}",
     search: "{% url 'search_api' %}",
     metroStatus: "{% url 'metro_status_api' %}",
+    notifications: "{% url 'notifications_api' %}",
 };
 
 /** POST por fetch, con CSRF y marcado como AJAX para que el servidor responda JSON. */
@@ -1155,6 +1169,56 @@ document.querySelectorAll('[data-fav-toggle]').forEach((btn) => {
         }
     });
 });
+
+
+// ── FR14: notificaciones de disponibilidad ─────────────────────────
+document.querySelectorAll('[data-notification-toggle]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+        const lotId = btn.dataset.notificationToggle;
+        btn.disabled = true;
+        try {
+            const data = await postJSON(`/api/notifications/${lotId}/toggle/`);
+            if (data.ok) {
+                btn.setAttribute('aria-pressed', data.enabled ? 'true' : 'false');
+                btn.classList.toggle('btn-warning', data.enabled);
+                btn.classList.toggle('btn-outline-secondary', !data.enabled);
+                btn.textContent = data.enabled ? '🔔' : '🔕';
+                btn.title = data.enabled ? 'Desactivar notificaciones' : 'Avisarme cuando haya cupos';
+                showToast(data.message);
+            }
+        } catch (e) {
+            showToast('No se pudo actualizar la notificación.', 'danger');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+});
+
+let shownAvailabilityNotifications = new Set();
+async function refreshParkingNotifications() {
+    const endpoint = URLS.notifications;
+    if (!endpoint) return;
+    try {
+        const resp = await fetch(endpoint, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (resp.status === 401 || resp.status === 403) return;
+        const data = await resp.json();
+        if (!data.ok) return;
+        const current = new Set();
+        (data.notifications || []).forEach((item) => {
+            const key = `${item.lot_id}:${item.available_spaces}`;
+            current.add(key);
+            if (!shownAvailabilityNotifications.has(key)) {
+                showToast(`🔔 ${item.message}`);
+            }
+        });
+        shownAvailabilityNotifications = current;
+    } catch (e) {
+        // Las notificaciones son auxiliares: un fallo aquí no interrumpe el home.
+    }
+}
+
+refreshParkingNotifications();
+setInterval(refreshParkingNotifications, 30 * 1000);
 
 // Refresco periódico del estado de los parqueaderos.
 setInterval(() => refreshLots(), 30 * 1000);

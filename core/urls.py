@@ -16,6 +16,9 @@ urlpatterns = [
     path("api/lots/", views.lots_state_api, name="lots_state_api"),
     path("api/search/", views.search_api, name="search_api"),
     path("api/favorites/<int:lot_id>/toggle/", views.toggle_favorite_api, name="toggle_favorite_api"),
+    # FR14 – suscripción y consulta de notificaciones de disponibilidad
+    path("api/notifications/<int:lot_id>/toggle/", views.toggle_notification_api, name="toggle_notification_api"),
+    path("api/notifications/", views.notifications_api, name="notifications_api"),
 
     # Estado del Metro (caché + refresco en segundo plano)
     path("metro-status/", views.metro_status_api, name="metro_status_api"),

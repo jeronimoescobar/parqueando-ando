@@ -28,6 +28,7 @@ El login/logout (FR2) está en core/auth_views.py.
 """
 
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from datetime import timedelta
 from django.utils import timezone
@@ -47,7 +48,7 @@ from .filters import (
     status_counts,
 )
 from .metro_status import get_metro_status, serialize_metro_status
-from .models import ParkingLot, ParkingSpot
+from .models import ParkingLot, ParkingSpot, ParkingNotificationSubscription
 from .parking_recommendation import recommend_parking_lot
 from .search import search_parking_lots
 from .transport_links import TRANSPORT_LINKS
@@ -136,6 +137,13 @@ def home(request):
     """
     lots = list(ParkingLot.objects.prefetch_related("spots", "notices"))
     favorite_ids = favorite_lot_ids(request)
+    notification_lot_ids = set()
+    if request.user.is_authenticated:
+        notification_lot_ids = set(
+            ParkingNotificationSubscription.objects.filter(
+                user=request.user, active=True
+            ).values_list("lot_id", flat=True)
+        )
 
     # FR12: filtros ?estado=...&vehiculo=... Se aplican también aquí (no
     # solo en JavaScript) para que un link filtrado llegue ya filtrado y
@@ -151,6 +159,7 @@ def home(request):
             "waiting_time": estimate_waiting_time(lot),
             "spots": lot.spots.all(),
             "is_favorite": lot.id in favorite_ids,
+            "notifications_enabled": lot.id in notification_lot_ids,
             "matches_filter": lot_matches(lot, filters["status"], filters["vehicle"]),
         })
 
@@ -168,6 +177,7 @@ def home(request):
         "metro_status": serialize_metro_status(metro_state),
         "map_lots": [serialize_lot(lot, favorite_ids) for lot in lots if lot.has_coordinates],
         "has_favorites": bool(favorite_ids),
+        "notification_lot_ids": notification_lot_ids,
         # FR12
         "active_filters": filters,
         "status_filter_options": _status_filter_options(filters, counts, len(lots)),
@@ -336,6 +346,54 @@ def toggle_favorite_api(request, lot_id):
             else f"{lot.name} ya no está en tus favoritos."
         ),
     })
+
+
+# ── FR14: notificaciones de disponibilidad ───────────────────────────────────
+
+
+@login_required
+@require_POST
+def toggle_notification_api(request, lot_id):
+    """Activa o desactiva una alerta de disponibilidad para un parqueadero."""
+    lot = get_object_or_404(ParkingLot, id=lot_id)
+    subscription, created = ParkingNotificationSubscription.objects.get_or_create(
+        user=request.user, lot=lot, defaults={"active": True}
+    )
+
+    if not created:
+        subscription.active = not subscription.active
+        subscription.save(update_fields=["active"])
+
+    enabled = subscription.active
+    return JsonResponse({
+        "ok": True,
+        "lot_id": lot.id,
+        "enabled": enabled,
+        "message": (
+            f"Te avisaremos cuando {lot.name} tenga disponibilidad."
+            if enabled
+            else f"Desactivaste las notificaciones de {lot.name}."
+        ),
+    })
+
+
+@login_required
+def notifications_api(request):
+    """Devuelve las alertas actuales de los parqueaderos seguidos por el usuario."""
+    subscriptions = ParkingNotificationSubscription.objects.filter(
+        user=request.user, active=True
+    ).select_related("lot")
+    notifications = []
+    for subscription in subscriptions:
+        lot = subscription.lot
+        if lot.available_spaces > 0:
+            notifications.append({
+                "lot_id": lot.id,
+                "lot_name": lot.name,
+                "available_spaces": lot.available_spaces,
+                "message": f"{lot.name} tiene {lot.available_spaces} espacio(s) disponible(s).",
+            })
+    return JsonResponse({"ok": True, "notifications": notifications})
 
 
 # ── Sprint 2 ──────────────────────────────────────────────────────────────────
