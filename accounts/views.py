@@ -17,7 +17,8 @@ def log_user_in(request, user):
     Inicia sesión y migra los favoritos anónimos a la cuenta.
     """
     anonymous_session_key = request.session.session_key
-    login(request, user)
+    backend = getattr(user, 'backend', None) or 'accounts.backends.EmailOrUsernameModelBackend'
+    login(request, user, backend=backend)
     attach_session_favorites_to_user(request, user, session_key=anonymous_session_key)
 
 
@@ -55,11 +56,11 @@ class UserRegisterView(CreateView):
 
     def form_valid(self, form):
         # Guardar el nuevo usuario en la base de datos
-        user = form.save()
+        self.object = form.save()
         # Iniciar sesión inmediatamente usando la función que migra favoritos
-        log_user_in(self.request, user)
+        log_user_in(self.request, self.object)
         
-        messages.success(self.request, f"¡Bienvenido a Parqueando Ando, {user.username}! Tu cuenta ha sido creada.")
+        messages.success(self.request, f"¡Bienvenido a Parqueando Ando, {self.object.username}! Tu cuenta ha sido creada.")
         return HttpResponseRedirect(self.get_success_url())
 
 
