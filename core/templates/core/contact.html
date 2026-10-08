@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+
+{% block title %}Contactar al Administrador - Parqueando-Ando{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white border-0 py-3">
+                    <h4 class="mb-0 fw-bold"><i class="bi bi-envelope-fill me-2"></i>Contactar al Administrador</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-secondary mb-4">¿Tienes alguna duda, sugerencia o problema con el parqueadero? Escríbenos y un administrador te responderá lo antes posible.</p>
+                    
+                    <form method="POST" action="{% url 'contact_admin' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="subject" class="form-label fw-bold">Asunto</label>
+                            <input type="text" class="form-control" id="subject" name="subject" required placeholder="Ej: Sugerencia de mejora, Problema con celda...">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="message" class="form-label fw-bold">Mensaje</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required placeholder="Escribe aquí tu mensaje detallado..."></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'home' %}" class="btn btn-light me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

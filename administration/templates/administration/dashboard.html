@@ -21,6 +21,7 @@
                     <span class="badge bg-warning text-dark ms-1">{{ pending_reports_count }}</span>
                     {% endif %}
                 </a>
+                <a href="{% url 'messages_management' %}" class="btn btn-outline-light btn-sm">✉️ Mensajes</a>
                 <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Ver sitio público</a>
                 <form action="{% url 'accounts:logout' %}" method="post" class="d-inline">
                     {% csrf_token %}
