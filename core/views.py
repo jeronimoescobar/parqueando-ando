@@ -472,6 +472,10 @@ from django.contrib import messages
 
 @login_required
 def contact_admin(request):
+    if request.user.is_staff:
+        messages.info(request, "Como administrador, gestionas los mensajes desde el Dashboard.")
+        return redirect("messages_management")
+
     if request.method == 'POST':
         subject = request.POST.get('subject')
         message = request.POST.get('message')
