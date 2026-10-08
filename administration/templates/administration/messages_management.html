@@ -1,98 +1,142 @@
-{% extends "administration/dashboard.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensajes de Contacto · Parqueando Ando</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-light">
 
-{% block title %}Mensajes de Contacto - Parqueando-Ando{% endblock %}
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">✉️ Mensajes de contacto (FR36)</span>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm">&larr; Volver al dashboard</a>
+        </div>
+    </nav>
 
-{% block dashboard_content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="mb-0">Bandeja de Entrada</h3>
-    <div>
-        <a href="{% url 'messages_management' %}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline-primary{% endif %}">Todos</a>
-        <a href="{% url 'messages_management' %}?status=pending" class="btn btn-sm {% if current_status == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">Pendientes</a>
-        <a href="{% url 'messages_management' %}?status=resolved" class="btn btn-sm {% if current_status == 'resolved' %}btn-success{% else %}btn-outline-success{% endif %}">Resueltos</a>
-    </div>
-</div>
+    <div class="container mb-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
 
-<div class="card shadow-sm border-0">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4">Remitente</th>
-                        <th>Asunto / Mensaje</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th class="text-end pe-4">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for msg in messages_list %}
-                    <tr>
-                        <td class="ps-4">
-                            <strong>{{ msg.user.username }}</strong><br>
-                            <small class="text-muted">{{ msg.user.email }}</small>
-                        </td>
-                        <td>
-                            <strong>{{ msg.subject }}</strong>
-                            <p class="mb-0 text-muted small text-truncate" style="max-width: 300px;" title="{{ msg.message }}">{{ msg.message }}</p>
-                        </td>
-                        <td>
-                            <small>{{ msg.created_at|date:"d M Y, h:i a" }}</small>
-                        </td>
-                        <td>
-                            {% if msg.status == 'pending' %}
-                            <span class="badge bg-warning text-dark">Pendiente</span>
-                            {% else %}
-                            <span class="badge bg-success">Resuelto</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end pe-4">
-                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#msgModal{{ msg.id }}">
-                                Leer
-                            </button>
-                        </td>
-                    </tr>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="h4 mb-0">Bandeja de entrada</h1>
+                <p class="text-muted small mb-0">Mensajes y solicitudes enviados por los usuarios a la administración.</p>
+            </div>
+            <div class="btn-group">
+                <a href="{% url 'messages_management' %}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline-primary{% endif %}">Todos</a>
+                <a href="{% url 'messages_management' %}?status=pending" class="btn btn-sm {% if current_status == 'pending' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">Pendientes</a>
+                <a href="{% url 'messages_management' %}?status=resolved" class="btn btn-sm {% if current_status == 'resolved' %}btn-success{% else %}btn-outline-success{% endif %}">Resueltos</a>
+            </div>
+        </div>
 
-                    <!-- Modal para leer mensaje -->
-                    <div class="modal fade" id="msgModal{{ msg.id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">{{ msg.subject }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p class="mb-1 text-muted small">De: <strong>{{ msg.user.username }}</strong> ({{ msg.user.email }})</p>
-                                    <p class="mb-3 text-muted small">Fecha: {{ msg.created_at|date:"d M Y, h:i a" }}</p>
-                                    <hr>
-                                    <p style="white-space: pre-wrap;">{{ msg.message }}</p>
-                                </div>
-                                <div class="modal-footer justify-content-between">
-                                    <form method="POST" action="{% url 'message_set_status' msg.id %}">
-                                        {% csrf_token %}
-                                        {% if msg.status == 'pending' %}
-                                            <input type="hidden" name="status" value="resolved">
-                                            <button type="submit" class="btn btn-success">Marcar como Resuelto</button>
-                                        {% else %}
-                                            <input type="hidden" name="status" value="pending">
-                                            <button type="submit" class="btn btn-warning text-dark">Reabrir Mensaje</button>
-                                        {% endif %}
-                                    </form>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Remitente</th>
+                            <th>Asunto</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th class="text-end pe-3">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for msg in messages_list %}
+                        <tr>
+                            <td class="ps-3">
+                                <strong>{{ msg.user.username }}</strong><br>
+                                <span class="text-muted small">{{ msg.user.email|default:"Sin correo" }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ msg.subject }}</strong>
+                                <p class="text-muted small mb-0 text-truncate" style="max-width: 320px;">
+                                    {{ msg.message }}
+                                </p>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ msg.created_at|date:"d M Y, h:i a" }}</small>
+                            </td>
+                            <td>
+                                {% if msg.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                {% else %}
+                                    <span class="badge bg-success">Resuelto</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#msgModal{{ msg.id }}">
+                                    <i class="bi bi-eye"></i> Ver mensaje
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Modal de lectura -->
+                        <div class="modal fade" id="msgModal{{ msg.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">{{ msg.subject }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3 p-2 bg-light rounded small">
+                                            <div><strong>De:</strong> {{ msg.user.username }} &lt;{{ msg.user.email }}&gt;</div>
+                                            <div><strong>Fecha:</strong> {{ msg.created_at|date:"d/m/Y h:i a" }}</div>
+                                            <div><strong>Estado actual:</strong> 
+                                                {% if msg.status == 'pending' %}
+                                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Resuelto</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <label class="form-label fw-bold small text-muted">Contenido del mensaje:</label>
+                                        <div class="p-3 border rounded bg-white" style="white-space: pre-wrap;">{{ msg.message }}</div>
+                                    </div>
+                                    <div class="modal-footer justify-content-between">
+                                        <form method="POST" action="{% url 'message_set_status' msg.id %}">
+                                            {% csrf_token %}
+                                            {% if msg.status == 'pending' %}
+                                                <input type="hidden" name="status" value="resolved">
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check-circle"></i> Marcar como Resuelto
+                                                </button>
+                                            {% else %}
+                                                <input type="hidden" name="status" value="pending">
+                                                <button type="submit" class="btn btn-sm btn-warning text-dark">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Reabrir Mensaje
+                                                </button>
+                                            {% endif %}
+                                        </form>
+                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">
-                            No hay mensajes en esta categoría.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                No hay mensajes en esta bandeja.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
