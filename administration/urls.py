@@ -37,4 +37,7 @@ urlpatterns = [
     path("reports/<int:report_id>/status/", views.report_set_status, name="report_set_status"),
     path("reports/<int:report_id>/delete/", views.report_delete, name="report_delete"),
     path("reports/delete-invalid/", views.reports_delete_all_invalid, name="reports_delete_all_invalid"),
+
+    path("messages/", views.messages_management, name="messages_management"),
+    path("messages/<int:message_id>/status/", views.message_set_status, name="message_set_status"),
 ]

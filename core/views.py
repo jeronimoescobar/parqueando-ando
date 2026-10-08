@@ -464,3 +464,29 @@ def update_spot_status(request, slug, spot_id):
 
 def general_rules(request):
     return render(request, 'core/general_rules.html')
+
+
+from django.contrib.auth.decorators import login_required
+from administration.models import ContactMessage
+from django.contrib import messages
+
+@login_required
+def contact_admin(request):
+    if request.user.is_staff:
+        messages.info(request, "Como administrador, gestionas los mensajes desde el Dashboard.")
+        return redirect("messages_management")
+
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        if subject and message:
+            ContactMessage.objects.create(
+                user=request.user,
+                subject=subject,
+                message=message
+            )
+            messages.success(request, '¡Tu mensaje ha sido enviado al administrador correctamente!')
+            return redirect('home')
+        else:
+            messages.error(request, 'Por favor completa todos los campos.')
+    return render(request, 'core/contact.html')

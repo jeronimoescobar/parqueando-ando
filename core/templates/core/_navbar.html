@@ -27,6 +27,9 @@
                 <ul class="dropdown-menu dropdown-menu-end shadow">
                     <li><span class="dropdown-item-text small text-muted">Sesión: {{ user.get_username }}</span></li>
                     <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">👤 Mi perfil</a></li>
+                    {% if not user.is_staff %}
+                    <li><a class="dropdown-item" href="{% url 'contact_admin' %}">✉️ Contactar Admin</a></li>
+                    {% endif %}
                     {% if user.is_staff %}
                     <li><a class="dropdown-item" href="{% url 'dashboard' %}">🛠️ Panel de administración</a></li>
                     {% endif %}

@@ -353,3 +353,32 @@ def reports_delete_all_invalid(request):
     else:
         messages.info(request, "No había reportes inválidos para eliminar.")
     return redirect(f"{reverse('reports_management')}?status=invalid")
+
+
+from .models import ContactMessage
+
+@staff_member_required
+def messages_management(request):
+    messages_list = ContactMessage.objects.all().order_by('-created_at')
+    
+    status_filter = request.GET.get('status')
+    if status_filter in ['pending', 'resolved']:
+        messages_list = messages_list.filter(status=status_filter)
+        
+    return render(request, 'administration/messages_management.html', {
+        'messages_list': messages_list,
+        'current_status': status_filter
+    })
+
+@require_POST
+@staff_member_required
+def message_set_status(request, message_id):
+    msg = get_object_or_404(ContactMessage, id=message_id)
+    new_status = request.POST.get('status')
+    
+    if new_status in dict(ContactMessage.STATUS_CHOICES):
+        msg.status = new_status
+        msg.save()
+        messages.success(request, f'Estado del mensaje cambiado a {msg.get_status_display()}.')
+    
+    return redirect('messages_management')
