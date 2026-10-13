@@ -389,6 +389,13 @@ body.d-flex { background-image: linear-gradient(160deg, #efe7da 0%, var(--pa-cre
 .filter-label { color: var(--pa-bronze-700); font-family: var(--pa-font-display); letter-spacing: .08em; }
 .filter-chip { border-color: #d8d0c2; background: #fff; color: var(--pa-charcoal); min-height: 36px; }
 .chip-count { background: var(--pa-bronze-100); color: var(--pa-bronze-700); }
+/* Contador del filtro SELECCIONADO: pastilla blanca sólida con el número
+   del color del botón. Antes quedaba café sobre fondo semitransparente y no
+   se leía (contraste 1.1:1 en "Todos"); así todos superan el 4.5:1 de WCAG AA. */
+.filter-chip.active .chip-count { background: #fff; color: var(--pa-navy-800); }
+.filter-chip.active[data-filter-value="available"] .chip-count { color: var(--pa-ok); }
+.filter-chip.active[data-filter-value="full"] .chip-count { color: var(--pa-bad); }
+.filter-chip.active[data-filter-value="limited"] .chip-count { color: var(--pa-ink); }
 
 /* Tarjeta de parqueadero */
 .lot-card .card-body { padding: 1.35rem 1.5rem; }
