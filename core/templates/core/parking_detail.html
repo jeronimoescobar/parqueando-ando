@@ -1,3 +1,4 @@
+{% load static %}
 {% load l10n %}
 <!DOCTYPE html>
 <html lang="es">
@@ -27,7 +28,7 @@
             position: absolute;
             transform: translate(-50%, -50%) rotate(var(--spot-rotation, 0deg));
             border-radius: 3px;
-            border: 2px dashed #9ec5fe;
+            border: 2px dashed #d9bf9f;
             font-size: 0.62rem;
             font-weight: 700;
             color: #fff;
@@ -40,7 +41,7 @@
             transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
         }
         .spot-marker:hover {
-            border-color: #0a58ca;
+            border-color: #0f2747;
             transform: translate(-50%, -50%) rotate(var(--spot-rotation, 0deg)) scale(1.12);
             box-shadow: 0 0 0 3px rgba(10, 88, 202, 0.25);
             z-index: 5;
@@ -53,10 +54,14 @@
             display: inline-block;
             width: 16px; height: 16px;
             border-radius: 3px;
-            border: 2px dashed #9ec5fe;
+            border: 2px dashed #d9bf9f;
             vertical-align: middle;
         }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core/css/theme.css' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'core/img/favicon.svg' %}">
 </head>
 
 <body class="bg-light">
@@ -79,7 +84,7 @@
             <div class="d-flex align-items-center gap-2">
                 {% if lot.rules.exists %}
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#rulesModal">
-                    📄 Ver Reglas del Parqueadero
+                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i> Ver Reglas del Parqueadero
                 </button>
                 {% endif %}
                 <span class="badge fs-6
@@ -98,7 +103,7 @@
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="rulesModalLabel">📄 Reglas - {{ lot.name }}</h5>
+                        <h5 class="modal-title" id="rulesModalLabel"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Reglas - {{ lot.name }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body text-start">
@@ -125,7 +130,7 @@
         <!-- Avisos administrativos (ParkingLotNotice) — ver core/models.py -->
         {% for notice in lot.active_notices %}
         <div class="alert alert-warning py-2 px-3 small">
-            ℹ️ {{ notice.message }}
+            <i class="bi bi-info-circle" aria-hidden="true"></i> {{ notice.message }}
         </div>
         {% endfor %}
 
@@ -145,7 +150,7 @@
             <div class="col-6 col-md-3">
                 <div class="card text-center h-100">
                     <div class="card-body py-3">
-                        <div class="small text-muted">🚗 Carros</div>
+                        <div class="small text-muted"><i class="bi bi-car-front" aria-hidden="true"></i> Carros</div>
                         <div class="h5 mb-0">{{ lot.available_cars }}/{{ lot.capacity_cars }}</div>
                     </div>
                 </div>
@@ -153,7 +158,7 @@
             <div class="col-6 col-md-3">
                 <div class="card text-center h-100">
                     <div class="card-body py-3">
-                        <div class="small text-muted">🏍️ Motos</div>
+                        <div class="small text-muted"><i class="pa-ico pa-ico-moto" aria-hidden="true"></i> Motos</div>
                         <div class="h5 mb-0">{{ lot.available_motorcycles }}/{{ lot.capacity_motorcycles }}</div>
                     </div>
                 </div>
@@ -161,7 +166,7 @@
             <div class="col-6 col-md-3">
                 <div class="card text-center h-100">
                     <div class="card-body py-3">
-                        <div class="small text-muted">♿ PMR</div>
+                        <div class="small text-muted"><i class="bi bi-universal-access" aria-hidden="true"></i> PMR</div>
                         <div class="h5 mb-0">{{ lot.available_accessibility }}/{{ lot.capacity_accessibility }}</div>
                     </div>
                 </div>
@@ -169,7 +174,7 @@
         </div>
 
         {% if lot.occupancy_status == 'full' %}
-        <div class="alert alert-danger text-center fw-bold">⚠️ ¡PARQUEADERO LLENO! No hay celdas disponibles.</div>
+        <div class="alert alert-danger text-center fw-bold"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> ¡PARQUEADERO LLENO! No hay celdas disponibles.</div>
         {% endif %}
 
         <!-- ================================================================
@@ -224,9 +229,9 @@
                 </div>
                 <div class="modal-body d-flex flex-column gap-2">
                     <p class="text-muted small mb-1">¿Cómo está este espacio ahora mismo?</p>
-                    <button type="button" class="btn btn-success spot-status-btn" data-status="empty">🟢 Vacío</button>
-                    <button type="button" class="btn btn-danger spot-status-btn" data-status="occupied">🔴 Ocupado</button>
-                    <button type="button" class="btn btn-secondary spot-status-btn" data-status="unknown">⚪ No sé</button>
+                    <button type="button" class="btn btn-success spot-status-btn" data-status="empty"><i class="bi bi-circle-fill text-success" aria-hidden="true"></i> Vacío</button>
+                    <button type="button" class="btn btn-danger spot-status-btn" data-status="occupied"><i class="bi bi-circle-fill text-danger" aria-hidden="true"></i> Ocupado</button>
+                    <button type="button" class="btn btn-secondary spot-status-btn" data-status="unknown"><i class="bi bi-circle" aria-hidden="true"></i> No sé</button>
                 </div>
             </div>
         </div>

@@ -1,3 +1,4 @@
+{% load static %}
 {% load l10n %}
 <!DOCTYPE html>
 <html lang="es">
@@ -121,7 +122,7 @@
             position: absolute;
             transform: translate(-50%, -50%) rotate(var(--spot-rotation, 0deg));
             border-radius: 3px;
-            border: 2px dashed #9ec5fe;
+            border: 2px dashed #d9bf9f;
             font-size: 0.62rem;
             font-weight: 700;
             color: #fff;
@@ -134,7 +135,7 @@
             transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
         }
         .spot-marker:hover {
-            border-color: #0a58ca;
+            border-color: #0f2747;
             transform: translate(-50%, -50%) rotate(var(--spot-rotation, 0deg)) scale(1.12);
             box-shadow: 0 0 0 3px rgba(10, 88, 202, .25);
             z-index: 5;
@@ -146,7 +147,7 @@
             display: inline-block;
             width: 16px; height: 16px;
             border-radius: 3px;
-            border: 2px dashed #9ec5fe;
+            border: 2px dashed #d9bf9f;
             vertical-align: middle;
         }
 
@@ -234,6 +235,10 @@
         .filter-chip.active .chip-count { background: rgba(255,255,255,.28); }
         .lot-card.filtered-out { display: none !important; }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core/css/theme.css' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'core/img/favicon.svg' %}">
 </head>
 
 <body class="bg-light">
@@ -259,8 +264,8 @@
     </div>
 
     <div class="container text-center py-4">
-        <h1 class="display-5">🅿️arqueando-Ando</h1>
-        <p class="lead text-muted mb-0">Encuentra dónde parquear en el campus</p>
+        <h1 class="display-5 hero-title"><img src="{% static 'core/img/logo-mark.svg' %}" alt="" class="hero-mark">arqueando-Ando</h1>
+        <p class="lead text-muted mb-0">Parquea. Sigue. Aprende.</p>
     </div>
 
     <!-- ================================================================
@@ -273,7 +278,7 @@
     <div class="container mb-4">
         <div class="position-relative" style="max-width: 640px; margin: 0 auto;">
             <div class="input-group input-group-lg shadow-sm">
-                <span class="input-group-text bg-white border-end-0">🔎</span>
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search" aria-hidden="true"></i></span>
                 <input type="search" id="search-input"
                        class="form-control border-start-0"
                        placeholder="Ej: el de ingeniería, sur, el más desocupado, uno para moto"
@@ -328,7 +333,7 @@
     <div class="container mb-4">
         <div class="alert alert-success d-flex align-items-center gap-2 mb-0 {% if not recommended_lot %}d-none{% endif %}"
              role="alert" id="recommendation-banner">
-            <span class="fs-4">👍</span>
+            <span class="fs-4"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i></span>
             <div>
                 <strong>Parqueadero recomendado: <span data-rec="name">{{ recommended_lot.name|default:"" }}</span></strong>
                 <div class="small">
@@ -393,7 +398,7 @@
                     <a href="{{ opt.href }}" class="filter-chip {% if opt.active %}active{% endif %}"
                        data-filter-group="vehiculo" data-filter-value="{{ opt.value }}"
                        aria-pressed="{% if opt.active %}true{% else %}false{% endif %}">
-                        {% if opt.icon %}<span aria-hidden="true">{{ opt.icon }}</span>{% endif %}
+                        {% if opt.value == 'car' %}<i class="bi bi-car-front" aria-hidden="true"></i>{% elif opt.value == 'motorcycle' %}<i class="pa-ico pa-ico-moto" aria-hidden="true"></i>{% elif opt.value == 'accessibility' %}<i class="bi bi-universal-access" aria-hidden="true"></i>{% endif %}
                         {{ opt.label }}
                     </a>
                     {% endfor %}
@@ -412,7 +417,7 @@
 
         <div class="card border-0 shadow-sm mb-3 {% if visible_lots_count %}d-none{% endif %}" id="filter-empty">
             <div class="card-body text-center py-5">
-                <div class="fs-1 mb-2">🔍</div>
+                <div class="fs-1 mb-2"><i class="bi bi-search" aria-hidden="true"></i></div>
                 <p class="mb-1 fw-semibold">Ningún parqueadero coincide con estos filtros ahora mismo.</p>
                 <p class="text-muted small mb-3">La disponibilidad cambia todo el tiempo: esta lista se actualiza sola.</p>
                 <a href="{% url 'home' %}#disponibilidad" class="btn btn-sm btn-outline-secondary" data-filter-reset>Ver todos</a>
@@ -453,12 +458,12 @@
                                 data-notification-toggle="{{ item.lot.id }}"
                                 aria-pressed="{% if item.notifications_enabled %}true{% else %}false{% endif %}"
                                 title="{% if item.notifications_enabled %}Desactivar notificaciones{% else %}Avisarme cuando haya cupos{% endif %}">
-                            {% if item.notifications_enabled %}🔔{% else %}🔕{% endif %}
+                            {% if item.notifications_enabled %}<i class="bi bi-bell-fill" aria-hidden="true"></i>{% else %}<i class="bi bi-bell-slash" aria-hidden="true"></i>{% endif %}
                         </button>
                         {% else %}
                         <a class="btn btn-sm btn-outline-secondary ms-1"
                            href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}"
-                           title="Inicia sesión para activar notificaciones">🔕</a>
+                           title="Inicia sesión para activar notificaciones"><i class="bi bi-bell-slash" aria-hidden="true"></i></a>
                         {% endif %}
                     </h3>
                     <div class="d-flex align-items-center gap-2">
@@ -477,7 +482,7 @@
                      de usuarios (FR21/22/30). -->
                 <div data-field="notices">
                     {% for notice in item.lot.active_notices %}
-                    <div class="alert alert-warning py-2 px-3 small mb-2">ℹ️ {{ notice.message }}</div>
+                    <div class="alert alert-warning py-2 px-3 small mb-2"><i class="bi bi-info-circle" aria-hidden="true"></i> {{ notice.message }}</div>
                     {% endfor %}
                 </div>
 
@@ -508,11 +513,11 @@
 
                 {% if item.lot.has_vehicle_type_breakdown %}
                 <div class="d-flex flex-wrap gap-2 mb-3" aria-label="Distribución de cupos">
-                    <span class="badge text-bg-primary">🚗 Carros:
+                    <span class="badge text-bg-primary"><i class="bi bi-car-front" aria-hidden="true"></i> Carros:
                         <span data-field="available-cars">{{ item.lot.available_cars }}</span>/<span data-field="capacity-cars">{{ item.lot.capacity_cars }}</span></span>
-                    <span class="badge text-bg-secondary">🏍️ Motos:
+                    <span class="badge text-bg-secondary"><i class="pa-ico pa-ico-moto" aria-hidden="true"></i> Motos:
                         <span data-field="available-motorcycles">{{ item.lot.available_motorcycles }}</span>/<span data-field="capacity-motorcycles">{{ item.lot.capacity_motorcycles }}</span></span>
-                    <span class="badge text-bg-info">♿ PMR:
+                    <span class="badge text-bg-info"><i class="bi bi-universal-access" aria-hidden="true"></i> PMR:
                         <span data-field="available-accessibility">{{ item.lot.available_accessibility }}</span>/<span data-field="capacity-accessibility">{{ item.lot.capacity_accessibility }}</span></span>
                 </div>
                 {% endif %}
@@ -539,11 +544,11 @@
                     <button type="button" class="btn btn-sm btn-outline-info"
                             data-bs-toggle="collapse" data-bs-target="#info-{{ item.lot.slug }}"
                             aria-expanded="false" aria-controls="info-{{ item.lot.slug }}">
-                        ℹ️ Más información ⌄
+                        <i class="bi bi-info-circle" aria-hidden="true"></i> Más información ⌄
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-secondary"
                             data-bs-toggle="modal" data-bs-target="#rulesModal-{{ item.lot.slug }}">
-                        📄 Ver Reglas del Parqueadero
+                        <i class="bi bi-file-earmark-text" aria-hidden="true"></i> Ver Reglas del Parqueadero
                     </button>
                 </div>
 
@@ -552,7 +557,7 @@
                     <div class="modal-dialog modal-lg modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="rulesModalLabel-{{ item.lot.slug }}">📄 Reglas - {{ item.lot.name }}</h5>
+                                <h5 class="modal-title" id="rulesModalLabel-{{ item.lot.slug }}"><i class="bi bi-file-earmark-text" aria-hidden="true"></i> Reglas - {{ item.lot.name }}</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body text-start">
@@ -588,19 +593,19 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>🚗 Carros</td>
+                                        <td><i class="bi bi-car-front" aria-hidden="true"></i> Carros</td>
                                         <td class="text-center" data-field="capacity-cars">{{ item.lot.capacity_cars }}</td>
                                         <td class="text-center" data-field="occupied-cars">{{ item.lot.occupied_cars }}</td>
                                         <td class="text-center" data-field="available-cars">{{ item.lot.available_cars }}</td>
                                     </tr>
                                     <tr>
-                                        <td>🏍️ Motos</td>
+                                        <td><i class="pa-ico pa-ico-moto" aria-hidden="true"></i> Motos</td>
                                         <td class="text-center" data-field="capacity-motorcycles">{{ item.lot.capacity_motorcycles }}</td>
                                         <td class="text-center" data-field="occupied-motorcycles">{{ item.lot.occupied_motorcycles }}</td>
                                         <td class="text-center" data-field="available-motorcycles">{{ item.lot.available_motorcycles }}</td>
                                     </tr>
                                     <tr>
-                                        <td>♿ PMR</td>
+                                        <td><i class="bi bi-universal-access" aria-hidden="true"></i> PMR</td>
                                         <td class="text-center" data-field="capacity-accessibility">{{ item.lot.capacity_accessibility }}</td>
                                         <td class="text-center" data-field="occupied-accessibility">{{ item.lot.occupied_accessibility }}</td>
                                         <td class="text-center" data-field="available-accessibility">{{ item.lot.available_accessibility }}</td>
@@ -618,13 +623,12 @@
                             Última actualización: <span data-field="last-updated">{{ item.lot.last_updated|date:"d/m/Y H:i" }}</span>
                         </small>
                     </div>
-                </div>
 
                 <!-- FR28: aviso de parqueadero lleno -->
                 <div data-field="full-warning">
                     {% if item.lot.occupancy_status == 'full' %}
                     <div class="alert alert-danger py-2 px-3 mt-3 text-center fw-bold small" role="alert">
-                        ⚠️ ¡PARQUEADERO LLENO! No hay celdas disponibles.
+                        <i class="bi bi-exclamation-triangle" aria-hidden="true"></i> ¡PARQUEADERO LLENO! No hay celdas disponibles.
                     </div>
                     {% endif %}
                 </div>
@@ -638,52 +642,52 @@
                      funcionando normal (POST + redirect), como antes.
                      ============================================================ -->
                 <div class="mt-3 pt-3 border-top">
-                    <small class="text-muted d-block mb-2 text-center">👇 Acabo de llegar (Ocupar espacio):</small>
+                    <small class="text-muted d-block mb-2 text-center"><i class="bi bi-arrow-down-circle" aria-hidden="true"></i> Acabo de llegar (Ocupar espacio):</small>
                     <div class="d-flex gap-2 justify-content-center mb-3">
                         {% if item.lot.capacity_cars > 0 %}
                         <form action="{% url 'report_occupied' item.lot.id %}" method="POST" data-ajax-report>
                             {% csrf_token %}
                             <input type="hidden" name="vehicle_type" value="car">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">🚗 Carro</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-car-front" aria-hidden="true"></i> Carro</button>
                         </form>
                         {% endif %}
                         {% if item.lot.capacity_motorcycles > 0 %}
                         <form action="{% url 'report_occupied' item.lot.id %}" method="POST" data-ajax-report>
                             {% csrf_token %}
                             <input type="hidden" name="vehicle_type" value="motorcycle">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">🏍️ Moto</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="pa-ico pa-ico-moto" aria-hidden="true"></i> Moto</button>
                         </form>
                         {% endif %}
                         {% if item.lot.capacity_accessibility > 0 %}
                         <form action="{% url 'report_occupied' item.lot.id %}" method="POST" data-ajax-report>
                             {% csrf_token %}
                             <input type="hidden" name="vehicle_type" value="accessibility">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">♿ PMR</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-universal-access" aria-hidden="true"></i> PMR</button>
                         </form>
                         {% endif %}
                     </div>
 
-                    <small class="text-muted d-block mb-2 text-center">👋 Me voy (Liberar espacio):</small>
+                    <small class="text-muted d-block mb-2 text-center"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Me voy (Liberar espacio):</small>
                     <div class="d-flex gap-2 justify-content-center">
                         {% if item.lot.capacity_cars > 0 %}
                         <form action="{% url 'report_available' item.lot.id %}" method="POST" data-ajax-report>
                             {% csrf_token %}
                             <input type="hidden" name="vehicle_type" value="car">
-                            <button type="submit" class="btn btn-sm btn-outline-success">🚗 Carro</button>
+                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-car-front" aria-hidden="true"></i> Carro</button>
                         </form>
                         {% endif %}
                         {% if item.lot.capacity_motorcycles > 0 %}
                         <form action="{% url 'report_available' item.lot.id %}" method="POST" data-ajax-report>
                             {% csrf_token %}
                             <input type="hidden" name="vehicle_type" value="motorcycle">
-                            <button type="submit" class="btn btn-sm btn-outline-success">🏍️ Moto</button>
+                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="pa-ico pa-ico-moto" aria-hidden="true"></i> Moto</button>
                         </form>
                         {% endif %}
                         {% if item.lot.capacity_accessibility > 0 %}
                         <form action="{% url 'report_available' item.lot.id %}" method="POST" data-ajax-report>
                             {% csrf_token %}
                             <input type="hidden" name="vehicle_type" value="accessibility">
-                            <button type="submit" class="btn btn-sm btn-outline-success">♿ PMR</button>
+                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-universal-access" aria-hidden="true"></i> PMR</button>
                         </form>
                         {% endif %}
                     </div>
@@ -695,7 +699,7 @@
                     <button type="button" class="btn btn-sm btn-primary toggle-plan-btn"
                             data-bs-toggle="collapse" data-bs-target="#plan-{{ item.lot.slug }}"
                             aria-expanded="false" aria-controls="plan-{{ item.lot.slug }}">
-                        📍 Ver plano del parqueadero ⌄
+                        <i class="bi bi-geo-alt" aria-hidden="true"></i> Ver plano del parqueadero ⌄
                     </button>
 
                     <div class="collapse mt-3" id="plan-{{ item.lot.slug }}">
@@ -736,7 +740,7 @@
                     <button type="button" class="btn btn-sm btn-outline-warning"
                             data-bs-toggle="collapse" data-bs-target="#incorrect-{{ item.lot.slug }}"
                             aria-expanded="false" aria-controls="incorrect-{{ item.lot.slug }}">
-                        🚩 Reportar información incorrecta ⌄
+                        <i class="bi bi-flag" aria-hidden="true"></i> Reportar información incorrecta ⌄
                     </button>
 
                     <div class="collapse mt-3 text-start" id="incorrect-{{ item.lot.slug }}">
@@ -806,7 +810,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                    <h3 class="h6 mb-0">🚇 Estado y horarios del Metro de Medellín</h3>
+                    <h3 class="h6 mb-0"><i class="bi bi-train-front" aria-hidden="true"></i> Estado y horarios del Metro de Medellín</h3>
                     <span class="badge text-bg-light text-muted metro-updated-badge" id="metro-updated-badge">
                         Cargando...
                     </span>
@@ -821,7 +825,7 @@
 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="h6 mb-1">🚦 Estado de las líneas</h4>
+                        <h4 class="h6 mb-1"><i class="bi bi-signpost-split" aria-hidden="true"></i> Estado de las líneas</h4>
                         <small class="text-muted" data-metro-age="line_status"></small>
                     </div>
                     <div id="metro-line-status" class="d-flex flex-wrap gap-2">
@@ -832,7 +836,7 @@
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="h6 mb-1">📰 Noticias / avisos de servicio</h4>
+                            <h4 class="h6 mb-1"><i class="bi bi-newspaper" aria-hidden="true"></i> Noticias / avisos de servicio</h4>
                             <small class="text-muted" data-metro-age="news"></small>
                         </div>
                         <ul class="list-group list-group-flush" id="metro-news-list">
@@ -841,7 +845,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="h6 mb-1">🕐 Horarios de operación</h4>
+                            <h4 class="h6 mb-1"><i class="bi bi-clock" aria-hidden="true"></i> Horarios de operación</h4>
                             <small class="text-muted" data-metro-age="schedules"></small>
                         </div>
                         <ul class="list-group list-group-flush" id="metro-schedules-list">
@@ -863,9 +867,9 @@
                 </div>
                 <div class="modal-body d-flex flex-column gap-2">
                     <p class="text-muted small mb-1">¿Cómo está este espacio ahora mismo?</p>
-                    <button type="button" class="btn btn-success spot-status-btn" data-status="empty">🟢 Vacío</button>
-                    <button type="button" class="btn btn-danger spot-status-btn" data-status="occupied">🔴 Ocupado</button>
-                    <button type="button" class="btn btn-secondary spot-status-btn" data-status="unknown">⚪ No sé</button>
+                    <button type="button" class="btn btn-success spot-status-btn" data-status="empty"><i class="bi bi-circle-fill text-success" aria-hidden="true"></i> Vacío</button>
+                    <button type="button" class="btn btn-danger spot-status-btn" data-status="occupied"><i class="bi bi-circle-fill text-danger" aria-hidden="true"></i> Ocupado</button>
+                    <button type="button" class="btn btn-secondary spot-status-btn" data-status="unknown"><i class="bi bi-circle" aria-hidden="true"></i> No sé</button>
                 </div>
             </div>
         </div>
@@ -1029,7 +1033,7 @@ function applyLotState(lot, options = {}) {
     const fullBox = card.querySelector('[data-field="full-warning"]');
     if (fullBox) {
         fullBox.innerHTML = lot.occupancy_status === 'full'
-            ? '<div class="alert alert-danger py-2 px-3 mt-3 text-center fw-bold small" role="alert">⚠️ ¡PARQUEADERO LLENO! No hay celdas disponibles.</div>'
+            ? '<div class="alert alert-danger py-2 px-3 mt-3 text-center fw-bold small" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> ¡PARQUEADERO LLENO! No hay celdas disponibles.</div>'
             : '';
     }
 
@@ -1037,7 +1041,7 @@ function applyLotState(lot, options = {}) {
     const noticesBox = card.querySelector('[data-field="notices"]');
     if (noticesBox) {
         noticesBox.innerHTML = (lot.notices || [])
-            .map((msg) => `<div class="alert alert-warning py-2 px-3 small mb-2">ℹ️ ${msg}</div>`)
+            .map((msg) => `<div class="alert alert-warning py-2 px-3 small mb-2"><i class="bi bi-info-circle" aria-hidden="true"></i> ${msg}</div>`)
             .join('');
     }
 
@@ -1182,7 +1186,7 @@ document.querySelectorAll('[data-notification-toggle]').forEach((btn) => {
                 btn.setAttribute('aria-pressed', data.enabled ? 'true' : 'false');
                 btn.classList.toggle('btn-warning', data.enabled);
                 btn.classList.toggle('btn-outline-secondary', !data.enabled);
-                btn.textContent = data.enabled ? '🔔' : '🔕';
+                btn.innerHTML = data.enabled ? '<i class="bi bi-bell-fill" aria-hidden="true"></i>' : '<i class="bi bi-bell-slash" aria-hidden="true"></i>';
                 btn.title = data.enabled ? 'Desactivar notificaciones' : 'Avisarme cuando haya cupos';
                 showToast(data.message);
             }
@@ -1262,9 +1266,9 @@ function popupHtml(lot) {
                 <strong>${lot.available_spaces}</strong> de ${lot.total_capacity} celdas libres
             </div>
             <div class="small text-muted mb-2">
-                🚗 ${lot.available_cars} &nbsp; 🏍️ ${lot.available_motorcycles} &nbsp; ♿ ${lot.available_accessibility}
+                <i class="bi bi-car-front"></i> ${lot.available_cars} &nbsp; <i class="pa-ico pa-ico-moto"></i> ${lot.available_motorcycles} &nbsp; <i class="bi bi-universal-access"></i> ${lot.available_accessibility}
             </div>
-            <div class="small mb-2">⏱️ ${lot.waiting_label}</div>
+            <div class="small mb-2"><i class="bi bi-stopwatch"></i> ${lot.waiting_label}</div>
             <a href="#lot-card-${lot.slug}" class="btn btn-sm btn-primary w-100">Ver detalle</a>
         </div>
     `;
@@ -1305,9 +1309,9 @@ function initMap(lots) {
     legend.onAdd = () => {
         const div = L.DomUtil.create('div', 'map-legend');
         div.innerHTML = `
-            <div><span class="dot" style="background:#198754"></span>Disponible</div>
-            <div><span class="dot" style="background:#fd7e14"></span>Limitado</div>
-            <div><span class="dot" style="background:#dc3545"></span>Lleno</div>
+            <div><span class="dot" style="background:#2f7d5b"></span>Disponible</div>
+            <div><span class="dot" style="background:#c98a2b"></span>Limitado</div>
+            <div><span class="dot" style="background:#b5423f"></span>Lleno</div>
         `;
         return div;
     };
@@ -1628,8 +1632,8 @@ document.querySelectorAll('.spot-status-btn').forEach((btn) => {
 document.querySelectorAll('.toggle-plan-btn').forEach((btn) => {
     const target = document.querySelector(btn.getAttribute('data-bs-target'));
     if (!target) return;
-    target.addEventListener('shown.bs.collapse', () => { btn.textContent = '📍 Ocultar plano ⌃'; });
-    target.addEventListener('hidden.bs.collapse', () => { btn.textContent = '📍 Ver plano del parqueadero ⌄'; });
+    target.addEventListener('shown.bs.collapse', () => { btn.innerHTML = '<i class="bi bi-geo-alt" aria-hidden="true"></i> Ocultar plano ⌃'; });
+    target.addEventListener('hidden.bs.collapse', () => { btn.innerHTML = '<i class="bi bi-geo-alt" aria-hidden="true"></i> Ver plano del parqueadero ⌄'; });
 });
 </script>
 

@@ -78,6 +78,25 @@ se editan desde `/admin/` → campo "Otros nombres", sin tocar código.
 **Favoritos.** Se pueden marcar con la estrella de cada tarjeta y aparecen de
 primeros. Ver abajo cómo conectarlos al login.
 
+## Rediseño visual (Sprint 3 · UI/UX)
+
+Cambio **solo de apariencia**: no se agregaron funciones, rutas, modelos ni APIs.
+Estilo "Urban Solutions": azul noche, bronce, crema/mármol; Roboto Condensed (títulos) + Inter (texto).
+
+- Todo el estilo vive en `core/static/core/css/theme.css` (tokens `--pa-*` + ajustes de Bootstrap),
+  enlazado al final del `<head>` de cada plantilla. Para cambiar un color de marca, edita los tokens
+  de `:root` en ese archivo.
+- Logo propio en `core/static/core/img/` (`logo-mark.svg`, `favicon.svg`). Íconos: Bootstrap Icons
+  (la moto es un ícono propio, clase `pa-ico-moto`).
+- Colores de estado (disponible / limitado / lleno) conservados, siempre acompañados de texto.
+- Accesibilidad: contraste ≥ 4.5:1 en los pares de color de marca, foco visible con teclado y
+  `prefers-reduced-motion` respetado. Probado sin desbordes a 360, 768 y 1280 px.
+- Corrección menor de HTML: en el home sobraba un `</div>` por tarjeta, y el perfil no cargaba
+  el JavaScript de Bootstrap (el menú de usuario no abría).
+- Letra grande y legible: base de 18 px (17 px en móvil). Para cambiar el tamaño de todo el sitio,
+  edita `--pa-base-size` en el bloque "FASE 6" de `theme.css`.
+- Fuentes e íconos se cargan por CDN (como Bootstrap); sin internet se usan fuentes del sistema.
+
 ## Login (FR2) y favoritos
 
 El login (FR2) ya está en `/accounts/login/` y funciona con cualquier usuario

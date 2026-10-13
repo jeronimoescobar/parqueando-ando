@@ -1,3 +1,4 @@
+{% load static %}
 {% comment %}
     Barra superior compartida por las páginas públicas (home e información).
     Uso: {% include "core/_navbar.html" with active="home" %}
@@ -6,7 +7,7 @@
 {% endcomment %}
 <nav class="navbar navbar-expand bg-white border-bottom shadow-sm">
     <div class="container flex-wrap gap-2">
-        <a class="navbar-brand fw-semibold" href="{% url 'home' %}">🅿️ Parqueando Ando</a>
+        <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="{% url 'home' %}"><img src="{% static 'core/img/logo-mark.svg' %}" alt="" class="brand-mark"> <span>Parqueando Ando</span></a>
 
         <div class="d-flex align-items-center gap-2 ms-auto flex-wrap justify-content-end">
             <a href="{% url 'home' %}"
@@ -15,23 +16,23 @@
             </a>
             <a href="{% url 'parking_info' %}"
                class="btn btn-sm {% if active == 'info' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                ℹ️ Información
+                <i class="bi bi-info-circle" aria-hidden="true"></i> Información
             </a>
 
             {% if user.is_authenticated %}
             <div class="dropdown">
                 <button class="btn btn-sm btn-light border dropdown-toggle" type="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                    👤 {{ user.get_short_name|default:user.get_username }}
+                    <i class="bi bi-person" aria-hidden="true"></i> {{ user.get_short_name|default:user.get_username }}
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
                     <li><span class="dropdown-item-text small text-muted">Sesión: {{ user.get_username }}</span></li>
-                    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">👤 Mi perfil</a></li>
+                    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person" aria-hidden="true"></i> Mi perfil</a></li>
                     {% if not user.is_staff %}
-                    <li><a class="dropdown-item" href="{% url 'contact_admin' %}">✉️ Contactar Admin</a></li>
+                    <li><a class="dropdown-item" href="{% url 'contact_admin' %}"><i class="bi bi-envelope" aria-hidden="true"></i> Contactar Admin</a></li>
                     {% endif %}
                     {% if user.is_staff %}
-                    <li><a class="dropdown-item" href="{% url 'dashboard' %}">🛠️ Panel de administración</a></li>
+                    <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="bi bi-tools" aria-hidden="true"></i> Panel de administración</a></li>
                     {% endif %}
                     <li><hr class="dropdown-divider"></li>
                     <li>

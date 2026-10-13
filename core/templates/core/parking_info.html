@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Información de parqueaderos · Parqueando Ando</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         .info-hero {
             background: linear-gradient(135deg, #0d6efd 0%, #3d8bfd 100%);
@@ -49,6 +51,10 @@
             padding: .35rem .8rem; font-size: .9rem;
         }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core/css/theme.css' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'core/img/favicon.svg' %}">
 </head>
 <body class="bg-light">
     {% include "core/_navbar.html" with active="info" %}
@@ -71,12 +77,12 @@
     <div class="section-nav">
         <div class="container py-2">
             <nav class="nav gap-1" aria-label="Secciones">
-                <a class="nav-link" href="#horarios">🕐 Horarios</a>
-                <a class="nav-link" href="#tarifas">💰 Tarifas</a>
-                <a class="nav-link" href="#ingreso">🚗 Cómo entrar</a>
-                <a class="nav-link" href="#pagos">💳 Dónde pagar</a>
-                <a class="nav-link" href="#normas">📋 Normas</a>
-                <a class="nav-link" href="#contacto">📞 Contacto</a>
+                <a class="nav-link" href="#horarios"><i class="bi bi-clock" aria-hidden="true"></i> Horarios</a>
+                <a class="nav-link" href="#tarifas"><i class="bi bi-cash-coin" aria-hidden="true"></i> Tarifas</a>
+                <a class="nav-link" href="#ingreso"><i class="bi bi-car-front" aria-hidden="true"></i> Cómo entrar</a>
+                <a class="nav-link" href="#pagos"><i class="bi bi-credit-card" aria-hidden="true"></i> Dónde pagar</a>
+                <a class="nav-link" href="#normas"><i class="bi bi-clipboard-check" aria-hidden="true"></i> Normas</a>
+                <a class="nav-link" href="#contacto"><i class="bi bi-telephone" aria-hidden="true"></i> Contacto</a>
             </nav>
         </div>
     </div>
@@ -86,7 +92,7 @@
         <!-- ── Horarios ─────────────────────────────────────────────── -->
         <section id="horarios" class="mb-5">
             <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
-                <h2 class="h4 mb-0">🕐 Horarios por parqueadero</h2>
+                <h2 class="h4 mb-0"><i class="bi bi-clock" aria-hidden="true"></i> Horarios por parqueadero</h2>
                 <small class="text-muted">"Abierto ahora" no tiene en cuenta los festivos.</small>
             </div>
 
@@ -142,15 +148,15 @@
 
         <!-- ── Tarifas ──────────────────────────────────────────────── -->
         <section id="tarifas" class="mb-5">
-            <h2 class="h4 mb-3">💰 Tarifas</h2>
+            <h2 class="h4 mb-3"><i class="bi bi-cash-coin" aria-hidden="true"></i> Tarifas</h2>
             <div class="card info-card shadow-sm">
                 <div class="table-responsive">
                     <table class="table rates-table mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th scope="col">Tipo de usuario</th>
-                                <th scope="col">🚗 Carro</th>
-                                <th scope="col">🏍️ Moto</th>
+                                <th scope="col"><i class="bi bi-car-front" aria-hidden="true"></i> Carro</th>
+                                <th scope="col"><i class="pa-ico pa-ico-moto" aria-hidden="true"></i> Moto</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -174,7 +180,7 @@
 
         <!-- ── Cómo entrar ──────────────────────────────────────────── -->
         <section id="ingreso" class="mb-5">
-            <h2 class="h4 mb-3">🚗 ¿Cómo entro?</h2>
+            <h2 class="h4 mb-3"><i class="bi bi-car-front" aria-hidden="true"></i> ¿Cómo entro?</h2>
             <div class="row g-3 mb-3">
                 {% for option in entry_options %}
                 <div class="col-12 col-md-6">
@@ -192,18 +198,18 @@
                 {% endfor %}
             </div>
             <div class="alert alert-info d-flex gap-2 align-items-start mb-0">
-                <span>⏱️</span>
+                <span><i class="bi bi-stopwatch" aria-hidden="true"></i></span>
                 <div class="small">{{ grace_period_note }}</div>
             </div>
         </section>
 
         <!-- ── Dónde pagar ──────────────────────────────────────────── -->
         <section id="pagos" class="mb-5">
-            <h2 class="h4 mb-3">💳 ¿Dónde pago?</h2>
+            <h2 class="h4 mb-3"><i class="bi bi-credit-card" aria-hidden="true"></i> ¿Dónde pago?</h2>
             <p class="text-muted small mb-2">Puntos automáticos de pago:</p>
             <div class="d-flex flex-wrap gap-2 mb-3">
                 {% for point in payment_points %}
-                <span class="pay-chip">📍 {{ point }}</span>
+                <span class="pay-chip"><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ point }}</span>
                 {% endfor %}
             </div>
             <p class="small mb-2">{{ online_payment_note }}</p>
@@ -214,7 +220,7 @@
 
         <!-- ── Normas ───────────────────────────────────────────────── -->
         <section id="normas" class="mb-5">
-            <h2 class="h4 mb-3">📋 Normas básicas</h2>
+            <h2 class="h4 mb-3"><i class="bi bi-clipboard-check" aria-hidden="true"></i> Normas básicas</h2>
             <div class="card info-card shadow-sm">
                 <div class="card-body d-flex flex-column gap-3">
                     {% for rule in rules %}
@@ -229,7 +235,7 @@
 
         <!-- ── Contacto ─────────────────────────────────────────────── -->
         <section id="contacto" class="mb-4">
-            <h2 class="h4 mb-3">📞 Contacto</h2>
+            <h2 class="h4 mb-3"><i class="bi bi-telephone" aria-hidden="true"></i> Contacto</h2>
             <div class="row g-3">
                 {% for contact in contacts %}
                 <div class="col-12 col-md-6">

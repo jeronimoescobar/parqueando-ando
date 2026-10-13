@@ -1,0 +1,638 @@
+/* =====================================================================
+   PARQUEANDO-ANDO · Sistema de identidad "Urban Solutions" — Sprint 3
+   Fase 1: base visual (tokens, tipografía, componentes Bootstrap).
+
+   REGLA: este archivo SOLO cambia apariencia. No agrega funciones ni
+   cambia el HTML/JS de la lógica. Se carga al final del <head> para
+   sobreescribir Bootstrap y los <style> de cada plantilla.
+   Estilo: elegante y sobrio — azul noche, bronce cepillado, crema/mármol.
+   ===================================================================== */
+
+:root {
+    /* Paleta de marca */
+    --pa-navy-900: #0b1b33;
+    --pa-navy-800: #0f2747;
+    --pa-navy-700: #173561;
+    --pa-navy-100: #e6ebf3;
+    --pa-bronze-700: #765839;
+    --pa-bronze-600: #a07e5a;
+    --pa-bronze-500: #b8926a;
+    --pa-bronze-300: #d9bf9f;
+    --pa-bronze-100: #f3e9dd;
+    --pa-cream: #f5f1ea;
+    --pa-marble: #fbfaf7;
+    --pa-charcoal: #2f3136;
+    --pa-ink: #1c2230;
+    --pa-muted: #596070;
+    --pa-line: #e4ddd1;
+
+    /* Estados (se mantienen reconocibles pero más sobrios) */
+    --pa-ok: #2f7d5b;
+    --pa-warn: #c98a2b;
+    --pa-bad: #b5423f;
+
+    --pa-radius: 14px;
+    --pa-radius-sm: 10px;
+    --pa-shadow-sm: 0 1px 2px rgba(15,39,71,.06), 0 2px 8px rgba(15,39,71,.05);
+    --pa-shadow-md: 0 6px 24px rgba(15,39,71,.10);
+    --pa-bronze-grad: linear-gradient(135deg, #c9a47c 0%, #a07e5a 55%, #8a6a4a 100%);
+
+    --pa-font-display: "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+    --pa-font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    /* Re-mapeo de variables de Bootstrap 5.3 */
+    --bs-body-font-family: var(--pa-font-body);
+    --bs-body-color: var(--pa-ink);
+    --bs-body-bg: var(--pa-cream);
+    --bs-secondary-color: var(--pa-muted);
+    --bs-border-color: var(--pa-line);
+    --bs-link-color: var(--pa-navy-700);
+    --bs-link-color-rgb: 23, 53, 97;
+    --bs-link-hover-color-rgb: 138, 106, 74;
+    --bs-link-hover-color: var(--pa-bronze-700);
+    --bs-primary: var(--pa-navy-800);
+    --bs-primary-rgb: 15, 39, 71;
+    --bs-success: var(--pa-ok);
+    --bs-success-rgb: 47, 125, 91;
+    --bs-warning: var(--pa-warn);
+    --bs-warning-rgb: 201, 138, 43;
+    --bs-danger: var(--pa-bad);
+    --bs-danger-rgb: 181, 66, 63;
+    --bs-dark: var(--pa-navy-900);
+    --bs-dark-rgb: 11, 27, 51;
+    --bs-light: var(--pa-marble);
+    --bs-light-rgb: 251, 250, 247;
+    --bs-border-radius: var(--pa-radius-sm);
+    --bs-border-radius-lg: var(--pa-radius);
+}
+
+html { -webkit-font-smoothing: antialiased; }
+
+body, body.bg-light {
+    font-family: var(--pa-font-body);
+    color: var(--pa-ink);
+    background-color: var(--pa-cream) !important;
+    background-image:
+        radial-gradient(1200px 500px at 85% -10%, rgba(184,146,106,.14), transparent 60%),
+        radial-gradient(900px 400px at -10% 0%, rgba(15,39,71,.06), transparent 55%);
+    background-attachment: fixed;
+}
+
+/* ---------- Tipografía ---------- */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+.navbar-brand, .card-header, .modal-title {
+    font-family: var(--pa-font-display);
+    letter-spacing: .02em;
+    color: var(--pa-navy-800);
+}
+h1, .h1 { font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+h2, .h2, h3, .h3 { font-weight: 500; }
+.text-muted, .text-secondary { color: var(--pa-muted) !important; }
+.text-primary { color: var(--pa-navy-700) !important; }
+a { text-decoration-color: rgba(160,126,90,.5); text-underline-offset: 3px; }
+
+/* ---------- Barra superior ---------- */
+.navbar, .navbar.bg-white, .navbar.bg-dark {
+    background: var(--pa-navy-900) !important;
+    border-bottom: 1px solid rgba(217,191,159,.35) !important;
+    box-shadow: 0 2px 14px rgba(11,27,51,.25) !important;
+}
+.navbar .navbar-brand {
+    color: #fff !important;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    font-size: 1.05rem;
+}
+.navbar .navbar-brand::after {
+    content: "";
+    display: block;
+    height: 2px;
+    margin-top: 2px;
+    background: var(--pa-bronze-grad);
+    border-radius: 2px;
+}
+.navbar .btn-outline-primary,
+.navbar .btn-outline-light {
+    --bs-btn-color: var(--pa-bronze-300);
+    --bs-btn-border-color: rgba(217,191,159,.45);
+    --bs-btn-hover-bg: rgba(217,191,159,.14);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-border-color: var(--pa-bronze-300);
+    --bs-btn-active-bg: rgba(217,191,159,.22);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-border-color: var(--pa-bronze-300);
+}
+.navbar .btn-primary {
+    --bs-btn-bg: var(--pa-bronze-600);
+    --bs-btn-border-color: var(--pa-bronze-600);
+    --bs-btn-hover-bg: var(--pa-bronze-500);
+    --bs-btn-hover-border-color: var(--pa-bronze-500);
+    --bs-btn-color: #fff;
+    background-image: var(--pa-bronze-grad);
+}
+.navbar .btn-dark {
+    --bs-btn-bg: transparent;
+    --bs-btn-border-color: var(--pa-bronze-300);
+    --bs-btn-color: var(--pa-bronze-100);
+    --bs-btn-hover-bg: var(--pa-bronze-600);
+    --bs-btn-hover-border-color: var(--pa-bronze-600);
+    --bs-btn-hover-color: #fff;
+}
+.navbar .btn-light {
+    --bs-btn-bg: rgba(255,255,255,.08);
+    --bs-btn-color: #fff;
+    --bs-btn-border-color: rgba(217,191,159,.4);
+    --bs-btn-hover-bg: rgba(255,255,255,.16);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-border-color: var(--pa-bronze-300);
+}
+
+/* ---------- Botones ---------- */
+.btn {
+    font-weight: 500;
+    letter-spacing: .01em;
+    border-radius: var(--pa-radius-sm);
+    transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .12s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible {
+    outline: 2px solid var(--pa-bronze-500);
+    outline-offset: 2px;
+}
+.btn-primary {
+    --bs-btn-bg: var(--pa-navy-800);
+    --bs-btn-border-color: var(--pa-navy-800);
+    --bs-btn-hover-bg: var(--pa-navy-700);
+    --bs-btn-hover-border-color: var(--pa-navy-700);
+    --bs-btn-active-bg: var(--pa-navy-900);
+    --bs-btn-active-border-color: var(--pa-navy-900);
+    --bs-btn-disabled-bg: var(--pa-navy-800);
+    --bs-btn-disabled-border-color: var(--pa-navy-800);
+    --bs-btn-focus-shadow-rgb: 184,146,106;
+}
+.btn-outline-primary {
+    --bs-btn-color: var(--pa-navy-800);
+    --bs-btn-border-color: var(--pa-navy-800);
+    --bs-btn-hover-bg: var(--pa-navy-800);
+    --bs-btn-hover-border-color: var(--pa-navy-800);
+    --bs-btn-active-bg: var(--pa-navy-900);
+    --bs-btn-active-border-color: var(--pa-navy-900);
+    --bs-btn-focus-shadow-rgb: 184,146,106;
+}
+.btn-success {
+    --bs-btn-bg: var(--pa-ok); --bs-btn-border-color: var(--pa-ok);
+    --bs-btn-hover-bg: #276a4c; --bs-btn-hover-border-color: #276a4c;
+    --bs-btn-active-bg: #225d43; --bs-btn-active-border-color: #225d43;
+}
+.btn-outline-success {
+    --bs-btn-color: var(--pa-ok); --bs-btn-border-color: var(--pa-ok);
+    --bs-btn-hover-bg: var(--pa-ok); --bs-btn-hover-border-color: var(--pa-ok);
+    --bs-btn-active-bg: #276a4c; --bs-btn-active-border-color: #276a4c;
+}
+.btn-warning {
+    --bs-btn-bg: var(--pa-warn); --bs-btn-border-color: var(--pa-warn); --bs-btn-color: #fff;
+    --bs-btn-hover-bg: #b57921; --bs-btn-hover-border-color: #b57921; --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: #a06c1d; --bs-btn-active-border-color: #a06c1d; --bs-btn-active-color: #fff;
+}
+.btn-outline-warning {
+    --bs-btn-color: #9a6516; --bs-btn-border-color: var(--pa-warn);
+    --bs-btn-hover-bg: var(--pa-warn); --bs-btn-hover-border-color: var(--pa-warn); --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: #b57921; --bs-btn-active-border-color: #b57921; --bs-btn-active-color: #fff;
+}
+.btn-danger {
+    --bs-btn-bg: var(--pa-bad); --bs-btn-border-color: var(--pa-bad);
+    --bs-btn-hover-bg: #9c3835; --bs-btn-hover-border-color: #9c3835;
+    --bs-btn-active-bg: #8a312f; --bs-btn-active-border-color: #8a312f;
+}
+.btn-outline-danger {
+    --bs-btn-color: var(--pa-bad); --bs-btn-border-color: var(--pa-bad);
+    --bs-btn-hover-bg: var(--pa-bad); --bs-btn-hover-border-color: var(--pa-bad);
+    --bs-btn-active-bg: #9c3835; --bs-btn-active-border-color: #9c3835;
+}
+.btn-secondary {
+    --bs-btn-bg: var(--pa-charcoal); --bs-btn-border-color: var(--pa-charcoal);
+    --bs-btn-hover-bg: #43464d; --bs-btn-hover-border-color: #43464d;
+    --bs-btn-active-bg: #1f2125; --bs-btn-active-border-color: #1f2125;
+}
+.btn-outline-secondary {
+    --bs-btn-color: var(--pa-charcoal); --bs-btn-border-color: #b9b3a8;
+    --bs-btn-hover-bg: var(--pa-charcoal); --bs-btn-hover-border-color: var(--pa-charcoal);
+    --bs-btn-active-bg: #1f2125; --bs-btn-active-border-color: #1f2125;
+}
+.btn-dark {
+    --bs-btn-bg: var(--pa-navy-900); --bs-btn-border-color: var(--pa-navy-900);
+    --bs-btn-hover-bg: var(--pa-navy-700); --bs-btn-hover-border-color: var(--pa-navy-700);
+}
+.btn-light {
+    --bs-btn-bg: var(--pa-marble); --bs-btn-border-color: var(--pa-line);
+    --bs-btn-hover-bg: var(--pa-bronze-100); --bs-btn-hover-border-color: var(--pa-bronze-300);
+}
+.btn-outline-light {
+    --bs-btn-color: var(--pa-bronze-100); --bs-btn-border-color: rgba(217,191,159,.55);
+    --bs-btn-hover-bg: rgba(217,191,159,.18); --bs-btn-hover-color: #fff; --bs-btn-hover-border-color: var(--pa-bronze-300);
+}
+
+/* ---------- Tarjetas ---------- */
+.card {
+    background-color: var(--pa-marble);
+    border: 1px solid var(--pa-line);
+    border-radius: var(--pa-radius);
+    box-shadow: var(--pa-shadow-sm);
+}
+.card.shadow-sm, .card.shadow { box-shadow: var(--pa-shadow-sm) !important; }
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--pa-line);
+    font-weight: 500;
+    letter-spacing: .03em;
+}
+.card-header.bg-dark, .card-header.bg-primary {
+    background: var(--pa-navy-800) !important;
+    color: #fff !important;
+    border-bottom: 2px solid var(--pa-bronze-500);
+}
+.lot-card { border-radius: var(--pa-radius) !important; }
+.lot-card:hover { box-shadow: var(--pa-shadow-md) !important; border-color: var(--pa-bronze-300); }
+.lot-card.just-updated { box-shadow: 0 0 0 3px rgba(184,146,106,.45) !important; }
+.lot-card.is-favorite { border-color: var(--pa-bronze-500); }
+.bg-white { background-color: var(--pa-marble) !important; }
+.bg-light { background-color: var(--pa-cream) !important; }
+.border, .border-top, .border-bottom { border-color: var(--pa-line) !important; }
+
+/* ---------- Fondos y badges semánticos ---------- */
+.bg-success, .text-bg-success { background-color: var(--pa-ok) !important; }
+.bg-warning, .text-bg-warning { background-color: var(--pa-warn) !important; color: #fff !important; }
+.bg-danger,  .text-bg-danger  { background-color: var(--pa-bad) !important; }
+.bg-dark { background-color: var(--pa-navy-900) !important; }
+.bg-secondary, .text-bg-secondary { background-color: var(--pa-charcoal) !important; }
+.bg-primary, .text-bg-primary { background-color: var(--pa-navy-800) !important; }
+.text-bg-info, .bg-info { background-color: var(--pa-bronze-600) !important; color: #fff !important; }
+.text-bg-light { background-color: var(--pa-bronze-100) !important; color: var(--pa-bronze-700) !important; }
+.text-dark { color: var(--pa-ink) !important; }
+.badge { font-weight: 500; letter-spacing: .03em; border-radius: 999px; }
+.progress { background-color: #e9e3d8; border-radius: 999px; }
+
+/* ---------- Alertas ---------- */
+.alert { border-radius: var(--pa-radius-sm); border-width: 1px; border-left-width: 4px; box-shadow: var(--pa-shadow-sm); }
+.alert-warning { background: #fbf3e4; border-color: #ecd3a2; border-left-color: var(--pa-warn); color: #6b4a12; }
+.alert-danger  { background: #f9eaea; border-color: #e6bcba; border-left-color: var(--pa-bad);  color: #6e2523; }
+.alert-success { background: #e9f4ee; border-color: #bcdcca; border-left-color: var(--pa-ok);   color: #1f4f39; }
+.alert-info    { background: var(--pa-bronze-100); border-color: var(--pa-bronze-300); border-left-color: var(--pa-bronze-600); color: #5b4630; }
+
+/* ---------- Formularios ---------- */
+.form-control, .form-select {
+    background-color: #fff;
+    border: 1px solid #d8d0c2;
+    border-radius: var(--pa-radius-sm);
+    color: var(--pa-ink);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--pa-bronze-500);
+    box-shadow: 0 0 0 .22rem rgba(184,146,106,.25);
+}
+.form-label { font-weight: 500; color: var(--pa-navy-800); font-size: .9rem; }
+.form-check-input:checked { background-color: var(--pa-navy-800); border-color: var(--pa-navy-800); }
+.input-group-text { background: var(--pa-bronze-100); border-color: #d8d0c2; color: var(--pa-bronze-700); }
+
+/* ---------- Tablas y listas ---------- */
+.table { --bs-table-bg: transparent; --bs-table-border-color: var(--pa-line); }
+.table > thead { background: var(--pa-navy-800); color: #fff; }
+.table > thead th { font-family: var(--pa-font-display); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; font-size: .78rem; border-bottom: 2px solid var(--pa-bronze-500); }
+.table-hover > tbody > tr:hover > * { --bs-table-bg-state: var(--pa-bronze-100); }
+.list-group-item { background: transparent; border-color: var(--pa-line); }
+
+/* ---------- Modales y menús ---------- */
+.modal-content { border: 1px solid var(--pa-line); border-radius: var(--pa-radius); background: var(--pa-marble); box-shadow: var(--pa-shadow-md); }
+.modal-header { border-bottom: 1px solid var(--pa-line); }
+.modal-footer { border-top: 1px solid var(--pa-line); }
+.dropdown-menu { border: 1px solid var(--pa-line); border-radius: var(--pa-radius-sm); background: var(--pa-marble); box-shadow: var(--pa-shadow-md) !important; }
+.dropdown-item:hover, .dropdown-item:focus { background: var(--pa-bronze-100); color: var(--pa-navy-800); }
+
+/* ---------- Mapa y plano (solo color/forma) ---------- */
+#parking-map { border: 1px solid var(--pa-line); border-radius: var(--pa-radius); box-shadow: var(--pa-shadow-sm); }
+.map-pin { border-color: var(--pa-marble); box-shadow: 0 3px 10px rgba(11,27,51,.35); }
+.map-pin-available { background-color: var(--pa-ok); }
+.map-pin-limited   { background-color: var(--pa-warn); }
+.map-pin-full      { background-color: var(--pa-bad); }
+.map-legend { background: rgba(251,250,247,.96); border: 1px solid var(--pa-line); }
+.leaflet-popup-content-wrapper { border-radius: var(--pa-radius-sm); }
+.spot-marker { border-color: var(--pa-bronze-300); }
+.spot-marker:hover { border-color: var(--pa-navy-800); box-shadow: 0 0 0 3px rgba(184,146,106,.35); }
+.fav-btn:hover, .fav-btn.is-favorite { color: var(--pa-bronze-500); }
+
+/* ---------- Detalles ---------- */
+hr { border-color: var(--pa-line); opacity: 1; }
+::selection { background: var(--pa-bronze-300); color: var(--pa-navy-900); }
+.login-card { border: 1px solid var(--pa-line) !important; box-shadow: var(--pa-shadow-md) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+/* ---------- Ajustes de piezas con color propio en cada plantilla ---------- */
+.info-hero {
+    background: linear-gradient(135deg, var(--pa-navy-900) 0%, var(--pa-navy-700) 100%);
+    border-bottom: 3px solid var(--pa-bronze-500);
+}
+.info-hero h1, .info-hero .h1 { color: #fff; }
+.rule-num { background: var(--pa-bronze-100); color: var(--pa-bronze-700); }
+.filter-chip:hover { border-color: var(--pa-bronze-300); background: var(--pa-bronze-100); color: var(--pa-navy-800); }
+.filter-chip.active { background: var(--pa-navy-800); border-color: var(--pa-navy-800); color: #fff; }
+.filter-chip.active[data-filter-value="available"] { background: var(--pa-ok); border-color: var(--pa-ok); }
+.filter-chip.active[data-filter-value="limited"]   { background: var(--pa-warn); border-color: var(--pa-warn); color: #fff; }
+.filter-chip.active[data-filter-value="full"]      { background: var(--pa-bad); border-color: var(--pa-bad); }
+.filter-chip.active[data-filter-group="vehiculo"]:not([data-filter-value=""]) { background: var(--pa-navy-800); border-color: var(--pa-navy-800); }
+.dot-available { background: var(--pa-ok); }
+.dot-limited { background: var(--pa-warn); }
+.dot-full { background: var(--pa-bad); }
+#search-results .list-group-item:hover { background-color: var(--pa-bronze-100); }
+body.d-flex { background-image: linear-gradient(160deg, #efe7da 0%, var(--pa-cream) 55%) !important; }
+
+/* =====================================================================
+   FASE 2 — Logo, inicio y tarjetas de parqueadero (solo apariencia)
+   ===================================================================== */
+.brand-mark { width: 30px; height: 30px; display: inline-block; flex: 0 0 auto; }
+.navbar .navbar-brand span { line-height: 1; }
+.hero-title {
+    display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 500; letter-spacing: .08em; margin-bottom: .4rem;
+}
+.hero-title::after { content: none; }
+.hero-mark { width: clamp(38px, 7vw, 56px); height: auto; filter: drop-shadow(0 1px 1px rgba(11,27,51,.25)); }
+.hero-title + .lead { font-size: 1.05rem; letter-spacing: .02em; }
+.hero-title + .lead::after {
+    content: ""; display: block; width: 72px; height: 2px; margin: .9rem auto 0;
+    background: var(--pa-bronze-grad); border-radius: 2px;
+}
+.login-mark { width: 64px; height: 64px; }
+
+/* Buscador */
+.input-group-lg > .form-control, .input-group-lg > .input-group-text { font-size: 1rem; }
+#search-input { padding-block: .85rem; }
+.input-group.shadow-sm { border-radius: var(--pa-radius-sm); }
+#search-results { border-radius: var(--pa-radius-sm); overflow: hidden; border: 1px solid var(--pa-line); }
+#search-results .list-group-item { padding: .7rem 1rem; }
+
+/* Encabezados de sección con filete bronce */
+.container > .d-flex > h2.h4, .container > h2.h4 {
+    position: relative; padding-bottom: .45rem; text-transform: uppercase; letter-spacing: .06em; font-size: 1.2rem;
+}
+.container > .d-flex > h2.h4::after, .container > h2.h4::after {
+    content: ""; position: absolute; left: 0; bottom: 0; width: 44px; height: 2px; background: var(--pa-bronze-grad);
+}
+
+/* Barra de filtros */
+.filter-bar { background: var(--pa-marble); border: 1px solid var(--pa-line); border-radius: var(--pa-radius); }
+.filter-label { color: var(--pa-bronze-700); font-family: var(--pa-font-display); letter-spacing: .08em; }
+.filter-chip { border-color: #d8d0c2; background: #fff; color: var(--pa-charcoal); min-height: 36px; }
+.chip-count { background: var(--pa-bronze-100); color: var(--pa-bronze-700); }
+
+/* Tarjeta de parqueadero */
+.lot-card .card-body { padding: 1.35rem 1.5rem; }
+.lot-card h3.h5 { font-size: 1.3rem; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; }
+.lot-card.border-danger { border-color: rgba(181,66,63,.55) !important; }
+.lot-card .progress { height: 10px !important; box-shadow: inset 0 1px 2px rgba(11,27,51,.08); }
+.lot-card .progress-bar { border-radius: 999px; transition: width .6s ease, background-color .3s ease; }
+.lot-card .badge { padding: .45em .8em; font-size: .78rem; }
+.lot-card .btn-sm { padding: .4rem .85rem; min-height: 36px; }
+.lot-card form .btn-sm { min-width: 96px; }
+.lot-card .border-top { border-top-color: var(--pa-line) !important; }
+.lot-card small.text-muted.d-block { letter-spacing: .02em; }
+.btn-outline-info {
+    --bs-btn-color: var(--pa-bronze-700); --bs-btn-border-color: var(--pa-bronze-300);
+    --bs-btn-hover-bg: var(--pa-bronze-100); --bs-btn-hover-color: var(--pa-navy-800); --bs-btn-hover-border-color: var(--pa-bronze-500);
+    --bs-btn-active-bg: var(--pa-bronze-300); --bs-btn-active-color: var(--pa-navy-900); --bs-btn-active-border-color: var(--pa-bronze-500);
+}
+.fav-btn { color: #cbbfae; font-size: 1.5rem; min-width: 32px; min-height: 32px; }
+.toggle-plan-btn { letter-spacing: .04em; }
+.table-light, .table > thead.table-light, .table-light > th, .table-light > td { --bs-table-bg: var(--pa-bronze-100); --bs-table-color: var(--pa-navy-800); }
+.table > thead.table-light { background: var(--pa-navy-800); }
+.table > thead.table-light th { background: transparent; color: #fff; }
+
+/* Banner de recomendación y avisos flotantes */
+#recommendation-banner { border-left-width: 4px; }
+#toast-stack .toast, #toast-stack > * { border-radius: var(--pa-radius-sm); box-shadow: var(--pa-shadow-md); }
+#filter-empty .card-body { background: var(--pa-marble); border-radius: var(--pa-radius); }
+
+/* Táctil y móvil */
+@media (max-width: 575.98px) {
+    .navbar .container { justify-content: center !important; }
+    .lot-card .card-body { padding: 1.1rem 1rem; }
+    .lot-card form .btn-sm { min-width: 84px; min-height: 44px; }
+    .filter-chip { min-height: 40px; }
+    #parking-map { height: 360px !important; }
+}
+
+@media (max-width: 575.98px) {
+    .hero-title { font-size: 1.45rem; letter-spacing: .05em; gap: .45rem; flex-wrap: nowrap; white-space: nowrap; }
+    .hero-mark { width: 34px; }
+}
+
+/* =====================================================================
+   FASE 3 — Íconos de trazo fino (Bootstrap Icons + moto propia)
+   ===================================================================== */
+.bi { vertical-align: -.125em; }
+.btn .bi, .badge .bi, .nav-link .bi { margin-right: .3em; }
+.pa-ico {
+    display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; margin-right: .3em;
+    background-color: currentColor;
+    -webkit-mask: var(--pa-ico) center / contain no-repeat; mask: var(--pa-ico) center / contain no-repeat;
+}
+.pa-ico-moto {
+    --pa-ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='5.5' cy='16.5' r='3'/%3E%3Ccircle cx='18.5' cy='16.5' r='3'/%3E%3Cpath d='M5.5 16.5 9 9h4l3 7.5M13 9l-1.5-3H9M15.5 7H18l1 3.5'/%3E%3C/svg%3E");
+}
+
+/* Campos de formularios de Django que no traen la clase de Bootstrap
+   (registro, cambio de contraseña): mismo aspecto que .form-control */
+.card form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not(.form-control),
+.card form textarea:not(.form-control), .card form select:not(.form-select):not(.form-control) {
+    display: block; width: 100%; padding: .5rem .85rem; font: inherit; color: var(--pa-ink);
+    background: #fff; border: 1px solid #d8d0c2; border-radius: var(--pa-radius-sm);
+}
+.card form input:not(.form-control):focus, .card form textarea:not(.form-control):focus, .card form select:not(.form-control):focus {
+    outline: none; border-color: var(--pa-bronze-500); box-shadow: 0 0 0 .22rem rgba(184,146,106,.25);
+}
+.card form .helptext, .card form ul { font-size: .8rem; color: var(--pa-muted); }
+.card form ul.errorlist { color: var(--pa-bad); padding-left: 1rem; }
+
+/* Páginas de detalle / info: tarjetas de cifras */
+.card .fs-3, .card .fs-2, .card .display-6 { font-family: var(--pa-font-display); color: var(--pa-navy-800); letter-spacing: .02em; }
+main.container > h1, .container > .d-flex h1.h3 { text-transform: uppercase; letter-spacing: .05em; font-size: 1.5rem; }
+.section-nav { background: var(--pa-marble) !important; border-bottom: 1px solid var(--pa-line) !important; }
+.section-nav a { color: var(--pa-navy-700); }
+.section-nav a:hover { color: var(--pa-bronze-700); }
+.spot-empty    { background-color: var(--pa-ok) !important; }
+.spot-occupied { background-color: var(--pa-bad) !important; }
+.spot-unknown  { background-color: #7b7f86 !important; }
+.card h2, .card h3, .card h4, .card .h4, .card .h5, .card .h6 { font-family: var(--pa-font-display); font-weight: 500; letter-spacing: .03em; color: var(--pa-navy-800); }
+.info-hero p, .info-hero .lead { color: rgba(255,255,255,.78); }
+
+/* =====================================================================
+   FASE 4 — Panel de administración
+   ===================================================================== */
+.table > thead { --bs-table-color: #fff; --bs-table-bg: var(--pa-navy-800); --bs-table-border-color: var(--pa-bronze-500); }
+.table > thead > tr > th { color: #fff !important; background-color: var(--pa-navy-800) !important; }
+.progress-bar { background-color: var(--pa-navy-700); }
+.nav-tabs { border-bottom: 1px solid var(--pa-line); }
+.nav-tabs .nav-link { color: var(--pa-navy-700); border-radius: var(--pa-radius-sm) var(--pa-radius-sm) 0 0; font-weight: 500; }
+.nav-tabs .nav-link:hover { border-color: var(--pa-line) var(--pa-line) transparent; color: var(--pa-bronze-700); }
+.nav-tabs .nav-link.active { color: var(--pa-navy-900); background: var(--pa-marble); border-color: var(--pa-line) var(--pa-line) var(--pa-marble); box-shadow: inset 0 2px 0 var(--pa-bronze-500); }
+.nav-pills .nav-link { color: var(--pa-navy-700); }
+.nav-pills .nav-link.active { background: var(--pa-navy-800); color: #fff; }
+.navbar .navbar-brand.h1 { font-size: 1.05rem; }
+.navbar .btn-outline-light .badge { background-color: var(--pa-bronze-500) !important; color: #fff !important; }
+.btn-close:focus { box-shadow: 0 0 0 .2rem rgba(184,146,106,.35); }
+#new-spot-form, #edit-spot-form { border-color: var(--pa-line); border-radius: var(--pa-radius-sm); box-shadow: var(--pa-shadow-md); background: var(--pa-marble); }
+@media (max-width: 767.98px) {
+    .navbar .container { flex-wrap: wrap; gap: .5rem; }
+    .navbar .d-flex.gap-2 { flex-wrap: wrap; }
+}
+
+/* =====================================================================
+   FASE 5 — Accesibilidad: contraste ≥ 4.5:1 y foco visible
+   (verificado con la fórmula WCAG 2.1; ver PROGRESO_UI_UX.md)
+   ===================================================================== */
+/* Texto sobre ámbar y bronce: tinta oscura en lugar de blanco */
+.bg-warning, .text-bg-warning { color: var(--pa-ink) !important; }
+.btn-warning { --bs-btn-color: var(--pa-ink); --bs-btn-hover-color: var(--pa-ink); --bs-btn-active-color: var(--pa-ink); --bs-btn-disabled-color: var(--pa-ink); }
+.btn-outline-warning { --bs-btn-hover-color: var(--pa-ink); --bs-btn-active-color: var(--pa-ink); }
+.filter-chip.active[data-filter-value="limited"] { color: var(--pa-ink); }
+.text-bg-info, .bg-info { background-color: var(--pa-bronze-700) !important; color: #fff !important; }
+.navbar .btn-primary { --bs-btn-color: var(--pa-navy-900); --bs-btn-hover-color: var(--pa-navy-900); --bs-btn-active-color: var(--pa-navy-900); color: var(--pa-navy-900); font-weight: 600; }
+
+/* Foco visible y consistente (teclado) */
+a:focus-visible, button:focus-visible, .filter-chip:focus-visible, .fav-btn:focus-visible,
+.spot-marker:focus-visible, .nav-link:focus-visible, .dropdown-item:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--pa-bronze-500);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+.navbar a:focus-visible, .navbar button:focus-visible { outline-color: var(--pa-bronze-300); }
+
+/* Móvil: títulos largos de la barra superior se parten en vez de desbordar */
+@media (max-width: 575.98px) {
+    .navbar .navbar-brand { white-space: normal; max-width: 100%; font-size: .95rem; letter-spacing: .06em; line-height: 1.25; }
+    .navbar .navbar-brand::after { display: none; }
+}
+
+/* =====================================================================
+   FASE 6 — Letra más grande y lectura fácil (accesibilidad)
+   Solo escala tipográfica y espaciado; no agrega controles ni funciones.
+   - Base 18 px (antes 16 px) y interlineado 1.65.
+   - Ningún texto de lectura baja de ~15 px; etiquetas/insignias ≥ 15 px.
+   - Botones, alertas, avisos y datos de disponibilidad con más cuerpo.
+   Para ajustar todo de una vez, cambia `--pa-base-size` (p. ej. 112.5% → 125%).
+   ===================================================================== */
+:root {
+    --pa-base-size: 112.5%;          /* 18 px */
+    --bs-body-font-size: 1rem;
+    --bs-body-line-height: 1.65;
+}
+html { font-size: var(--pa-base-size); }
+body { line-height: 1.65; }
+p, li, td, th, label, .form-text { line-height: 1.6; }
+
+/* Texto secundario: más grande y sin bajar de ~16 px */
+.small, small { font-size: .9em; }
+.text-muted, .text-secondary { font-size: inherit; }
+.form-text { font-size: .9rem; }
+.card form .helptext, .card form ul { font-size: .9rem; }
+.form-label { font-size: 1rem; }
+.form-control, .form-select { font-size: 1.0rem; padding: .6rem .9rem; min-height: 46px; }
+.form-control-sm, .form-select-sm { font-size: .95rem; min-height: 40px; padding: .4rem .7rem; }
+.input-group-lg > .form-control, .input-group-lg > .input-group-text { font-size: 1.1rem; }
+#search-input { font-size: 1.1rem; }
+#search-results .list-group-item { font-size: 1rem; padding: .85rem 1.1rem; }
+
+/* Insignias y etiquetas: legibles de un vistazo */
+.badge { font-size: .85rem; padding: .45em .8em; line-height: 1.2; }
+.lot-card .badge { font-size: .9rem; padding: .5em .9em; }
+.metro-updated-badge { font-size: .85rem; }
+#map-updated-badge { font-size: .85rem; }
+.filter-label { font-size: .85rem; min-width: 7rem; }
+.chip-count { font-size: .85rem; }
+.filter-chip { font-size: 1rem; padding: .4rem 1rem; min-height: 42px; }
+.table > thead th { font-size: .85rem; }
+.table > :not(caption) > * > * { padding: .7rem .75rem; }
+.table-sm > :not(caption) > * > * { padding: .55rem .6rem; }
+
+/* Botones */
+.btn { font-size: 1rem; }
+.btn-sm { font-size: .95rem; padding: .45rem .9rem; min-height: 40px; }
+.btn-lg { font-size: 1.15rem; }
+.navbar .btn-sm { font-size: .95rem; }
+.dropdown-item { font-size: 1rem; padding: .6rem 1rem; }
+.dropdown-item-text { font-size: .9rem; }
+.navbar .navbar-brand { font-size: 1.15rem; }
+.navbar .navbar-brand.h1 { font-size: 1.15rem; }
+
+/* Disponibilidad: el dato clave se lee primero */
+.lot-card .card-body { padding: 1.5rem 1.6rem; }
+.lot-card h3.h5 { font-size: 1.5rem; }
+.lot-card .progress { height: 14px !important; }
+.lot-card small.text-muted, .lot-card small { font-size: 1rem; }
+.lot-card .text-muted { color: #4d5462 !important; }
+.lot-card [data-field="percentage"] { font-weight: 600; }
+.lot-card form .btn-sm { min-width: 110px; min-height: 44px; font-size: 1rem; }
+.lot-card .fav-btn { font-size: 1.7rem; min-width: 40px; min-height: 40px; }
+.container > .d-flex > h2.h4, .container > h2.h4 { font-size: 1.45rem; }
+.hero-title + .lead { font-size: 1.25rem; }
+.lead { font-size: 1.25rem; }
+#recommendation-banner { font-size: 1.1rem; }
+#recommendation-banner .small { font-size: 1rem; }
+
+/* Alertas y avisos flotantes (incluye "parqueadero lleno") */
+.alert { font-size: 1.05rem; padding: 1rem 1.25rem; line-height: 1.55; }
+.alert.small, .alert .small, .alert-warning.small { font-size: 1rem !important; }
+[data-field="full-warning"] .alert { font-size: 1.15rem; padding: 1.1rem 1.25rem; }
+#toast-stack { font-size: 1.05rem; max-width: min(94vw, 440px); }
+#toast-stack .alert { font-size: 1.05rem; }
+
+/* Mapa y plano */
+.map-pin { width: 50px; height: 50px; font-size: .95rem; }
+.map-legend { font-size: .95rem; line-height: 1.7; padding: .65rem .85rem; }
+.map-legend .dot { width: 14px; height: 14px; }
+.leaflet-popup-content { font-size: 1rem; line-height: 1.5; }
+.leaflet-control-zoom a { width: 36px !important; height: 36px !important; line-height: 36px !important; font-size: 1.3rem !important; }
+.spot-marker { font-size: .72rem !important; }
+.legend-swatch { width: 20px; height: 20px; }
+
+/* Tablas y listas de contenido (información, reglamento, admin) */
+.card-body, .list-group-item { font-size: 1rem; }
+.rule-num { flex-basis: 2.2rem; height: 2.2rem; font-size: 1rem; }
+.section-nav a { font-size: 1rem; }
+.rates-table { font-size: 1.02rem; }
+.modal-body { font-size: 1.05rem; }
+.modal-body .small, .modal-body small { font-size: 1rem; }
+.modal-title { font-size: 1.35rem; }
+.nav-tabs .nav-link { font-size: 1rem; padding: .7rem 1.1rem; }
+.card .fs-3, .card .fs-2 { font-size: 2rem !important; }
+.card .display-6 { font-size: 2.6rem; }
+
+/* Móvil: texto grande sin desbordes */
+@media (max-width: 575.98px) {
+    :root { --pa-base-size: 106.25%; }   /* 17 px en pantallas pequeñas */
+    .lot-card .card-body { padding: 1.2rem 1.05rem; }
+    .lot-card h3.h5 { font-size: 1.3rem; }
+    .filter-label { min-width: 100%; }
+    .hero-title { font-size: 1.35rem; }
+    .navbar .navbar-brand, .navbar .navbar-brand.h1 { font-size: 1rem; }
+    #toast-stack { left: .75rem; right: .75rem; bottom: .75rem; max-width: none; }
+}
+
+/* Encabezados con acciones: se acomodan en varias líneas en vez de desbordar */
+.container > .d-flex.justify-content-between { flex-wrap: wrap; gap: .75rem; }
+.btn-group { flex-wrap: wrap; max-width: 100%; }
+@media (max-width: 575.98px) {
+    .btn-group > .btn { flex: 1 1 auto; }
+}
+
+@media (max-width: 575.98px) {
+    /* Botones de reporte (Carro / Moto / PMR): reparten el ancho de la tarjeta */
+    .lot-card .d-flex.justify-content-center > form { flex: 1 1 0; min-width: 0; }
+    .lot-card form .btn-sm { min-width: 0; width: 100%; padding-inline: .4rem; }
+    .lot-card .d-flex.gap-2 > .btn-sm { flex: 1 1 auto; }
+}
