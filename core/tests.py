@@ -342,3 +342,39 @@ class ParkingInfoTest(TestCase):
 
     def test_lot_without_schedule_is_unknown(self):
         self.assertIsNone(is_open_at(None, datetime(2026, 9, 22, 9, 0, tzinfo=self.BOGOTA)))
+
+
+class ContactAdminViewTest(TestCase):
+    """FR36 – Contactar al administrador y validación de campos obligatorios."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="password123")
+        self.client.login(username="testuser", password="password123")
+
+    def test_contact_page_loads(self):
+        response = self.client.get(reverse("contact_admin"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "obligatorios")
+
+    def test_missing_required_fields_fails(self):
+        from administration.models import ContactMessage
+        response = self.client.post(reverse("contact_admin"), {
+            "subject": "",
+            "message": "  ",
+        }, follow=True)
+        self.assertContains(response, "Por favor completa todos los campos obligatorios.")
+        self.assertEqual(ContactMessage.objects.count(), 0)
+
+    def test_valid_submission_creates_message(self):
+        from administration.models import ContactMessage
+        response = self.client.post(reverse("contact_admin"), {
+            "subject": "Duda sobre cupos",
+            "message": "Hola, ¿hay cupos para motos?",
+        }, follow=True)
+        self.assertContains(response, "¡Tu mensaje ha sido enviado al administrador correctamente!")
+        self.assertEqual(ContactMessage.objects.count(), 1)
+        msg = ContactMessage.objects.first()
+        self.assertEqual(msg.subject, "Duda sobre cupos")
+        self.assertEqual(msg.user, self.user)
+

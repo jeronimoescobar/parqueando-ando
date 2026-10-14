@@ -477,8 +477,8 @@ def contact_admin(request):
         return redirect("messages_management")
 
     if request.method == 'POST':
-        subject = request.POST.get('subject')
-        message = request.POST.get('message')
+        subject = (request.POST.get('subject') or '').strip()
+        message = (request.POST.get('message') or '').strip()
         if subject and message:
             ContactMessage.objects.create(
                 user=request.user,
@@ -488,5 +488,5 @@ def contact_admin(request):
             messages.success(request, '¡Tu mensaje ha sido enviado al administrador correctamente!')
             return redirect('home')
         else:
-            messages.error(request, 'Por favor completa todos los campos.')
+            messages.error(request, 'Por favor completa todos los campos obligatorios.')
     return render(request, 'core/contact.html')

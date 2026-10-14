@@ -7,15 +7,15 @@ class ParkingReport(models.Model):
     Satisface: FR21, FR22, FR30, FR32, FR34.
     """
     REPORT_TYPES = [
-        ('available', 'Espacio Disponible (FR21)'),
-        ('occupied', 'Espacio Ocupado (FR22)'),
-        ('incorrect', 'Información Incorrecta (FR30)'),
+        ('available', 'Espacio disponible'),
+        ('occupied', 'Espacio ocupado'),
+        ('incorrect', 'Información incorrecta'),
     ]
 
     STATUS_CHOICES = [
         ('pending', 'Pendiente de revisión'),
-        ('valid', 'Validado (FR34)'),
-        ('invalid', 'Inválido/Eliminado (FR32)'),
+        ('valid', 'Validado'),
+        ('invalid', 'Inválido / Rechazado'),
     ]
 
     VEHICLE_TYPES = [
@@ -28,7 +28,7 @@ class ParkingReport(models.Model):
     lot = models.ForeignKey(ParkingLot, on_delete=models.CASCADE, related_name='reports')
     report_type = models.CharField(max_length=20, choices=REPORT_TYPES)
     vehicle_type = models.CharField(max_length=20, choices=VEHICLE_TYPES, default='general')
-    description = models.TextField(blank=True, null=True, help_text="Detalle opcional (FR30)")
+    description = models.TextField(blank=True, null=True, help_text="Detalle opcional del reporte")
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 

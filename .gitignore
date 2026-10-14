@@ -18,3 +18,9 @@ db.sqlite3
 .vscode/
 .idea/
 .DS_Store
+
+# Archivos temporales de trabajo
+scratch/
+component_diagram_final.png
+deployment_diagram_final.png
+
