@@ -28,6 +28,7 @@
                 <ul class="dropdown-menu dropdown-menu-end shadow">
                     <li><span class="dropdown-item-text small text-muted">Sesión: {{ user.get_username }}</span></li>
                     <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person" aria-hidden="true"></i> Mi perfil</a></li>
+                    <li><a class="dropdown-item" href="{% url 'reports_history' %}"><i class="bi bi-clock-history" aria-hidden="true"></i> Mis reportes</a></li>
                     {% if not user.is_staff %}
                     <li><a class="dropdown-item" href="{% url 'contact_admin' %}"><i class="bi bi-envelope" aria-hidden="true"></i> Contactar Admin</a></li>
                     {% endif %}

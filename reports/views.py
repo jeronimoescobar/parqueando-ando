@@ -15,7 +15,8 @@ del ParkingLot correspondiente, para que el home se vea actualizado de
 inmediato sin esperar a que un admin valide el reporte.
 """
 
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.auth.decorators import login_required
 from datetime import timedelta
 from django.utils import timezone
 from django.contrib import messages
@@ -119,9 +120,11 @@ def report_available_space(request, lot_id):
         lot = get_object_or_404(ParkingLot, id=lot_id)
         vehicle_type = request.POST.get('vehicle_type', 'general')
         
-        # 1. Crear el reporte en la BD
+        # 1. Crear el reporte en la BD (FR31: almacena el usuario si está logueado)
+        user = request.user if request.user.is_authenticated else None
         ParkingReport.objects.create(
             lot=lot,
+            user=user,
             report_type='available',
             vehicle_type=vehicle_type,
             status='pending'
@@ -165,9 +168,11 @@ def report_occupied_space(request, lot_id):
         lot = get_object_or_404(ParkingLot, id=lot_id)
         vehicle_type = request.POST.get('vehicle_type', 'general')
         
-        # 1. Crear el reporte
+        # 1. Crear el reporte (FR31: almacena el usuario si está logueado)
+        user = request.user if request.user.is_authenticated else None
         ParkingReport.objects.create(
             lot=lot,
+            user=user,
             report_type='occupied',
             vehicle_type=vehicle_type,
             status='pending'
@@ -214,8 +219,10 @@ def report_incorrect_information(request, lot_id):
         vehicle_type = request.POST.get('vehicle_type', 'general')
         description = request.POST.get('description', '').strip()
 
+        user = request.user if request.user.is_authenticated else None
         ParkingReport.objects.create(
             lot=lot,
+            user=user,
             report_type='incorrect',
             vehicle_type=vehicle_type,
             description=description,
@@ -230,3 +237,15 @@ def report_incorrect_information(request, lot_id):
         )
 
     return redirect('home')
+
+# ============================================================================
+# FR31 – Parking reports history
+# Permite al usuario autenticado consultar el historial de todos los reportes
+# de ocupación y disponibilidad que ha enviado en el sistema.
+# ============================================================================
+@login_required
+def user_reports_history(request):
+    reports = ParkingReport.objects.filter(user=request.user).select_related('lot').order_by('-created_at')
+    return render(request, 'reports/history.html', {
+        'reports': reports,
+    })

@@ -8,4 +8,6 @@ urlpatterns = [
     path('occupied/<int:lot_id>/', views.report_occupied_space, name='report_occupied'),
     # FR30 – Report incorrect parking information
     path('incorrect/<int:lot_id>/', views.report_incorrect_information, name='report_incorrect'),
+    # FR31 – Parking reports history
+    path('history/', views.user_reports_history, name='reports_history'),
 ]

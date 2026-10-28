@@ -378,3 +378,46 @@ class ContactAdminViewTest(TestCase):
         self.assertEqual(msg.subject, "Duda sobre cupos")
         self.assertEqual(msg.user, self.user)
 
+
+
+class DisplayLastUpdateFR24Tests(TestCase):
+    """
+    FR24 – Display last update:
+    Pruebas unitarias para la visualización y actualización de fecha/hora de última actualización.
+    """
+
+    def setUp(self):
+        self.lot = ParkingLot.objects.create(
+            name="Parqueadero Biblioteca",
+            slug="parqueadero-biblioteca",
+            total_capacity=50,
+            capacity_cars=40,
+            capacity_motorcycles=10,
+            capacity_accessibility=0,
+            occupied_cars=5,
+            occupied_motorcycles=2,
+            occupied_accessibility=0,
+        )
+
+    def test_last_updated_display_property(self):
+        """Verifica que la propiedad last_updated_display devuelva una fecha legible (FR24)."""
+        self.assertIsNotNone(self.lot.last_updated)
+        display = self.lot.last_updated_display
+        self.assertIn("/", display)
+        self.assertIn(":", display)
+
+    def test_serialize_lot_includes_last_updated_display(self):
+        """Verifica que serialize_lot y la API de disponibilidad incluyan last_updated_display (FR24)."""
+        from core.views import serialize_lot
+        data = serialize_lot(self.lot)
+        self.assertIn("last_updated", data)
+        self.assertIn("last_updated_display", data)
+        self.assertEqual(data["last_updated_display"], self.lot.last_updated_display)
+
+    def test_parking_detail_displays_last_updated(self):
+        """Verifica que la vista de detalle del parqueadero muestre la última actualización (FR24)."""
+        response = self.client.get(reverse("parking_detail", kwargs={"slug": self.lot.slug}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Última actualización:")
+        self.assertContains(response, 'data-field="last-updated"')
+        self.assertContains(response, self.lot.last_updated_display)

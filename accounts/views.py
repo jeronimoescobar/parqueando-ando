@@ -99,7 +99,11 @@ def change_password(request):
 
 def render_profile(request, form, password_form):
     from django.shortcuts import render
+    from reports.models import ParkingReport
+    # FR31 – Parking reports history: historial reciente de reportes del usuario
+    user_reports = ParkingReport.objects.filter(user=request.user).select_related('lot').order_by('-created_at')[:20]
     return render(request, "accounts/profile.html", {
         "form": form,
         "password_form": password_form,
+        "user_reports": user_reports,
     })

@@ -95,7 +95,10 @@
                 </span>
             </div>
         </div>
-        <p class="text-muted">Espera estimada: <strong>{{ waiting_time.label }}</strong></p>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-muted small mb-3">
+            <span><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i> Espera estimada: <strong>{{ waiting_time.label }}</strong></span>
+            <span><i class="bi bi-clock-history me-1" aria-hidden="true"></i> Última actualización: <strong data-field="last-updated">{{ lot.last_updated_display }}</strong></span>
+        </div>
 
         <!-- Modal Reglamento (FR29) -->
         {% if lot.rules.exists %}
@@ -280,6 +283,12 @@
                         marker.classList.remove('spot-empty', 'spot-occupied', 'spot-unknown');
                         marker.classList.add(`spot-${data.status}`);
                         marker.title = `${marker.dataset.label} — ${data.status_display}`;
+                        const lu = document.querySelector('[data-field="last-updated"]');
+                        if (lu) {
+                            const now = new Date();
+                            const pad = (n) => String(n).padStart(2, '0');
+                            lu.textContent = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+                        }
                     } else {
                         alert(data.error || "No se pudo actualizar el espacio.");
                     }

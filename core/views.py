@@ -111,6 +111,7 @@ def serialize_lot(lot, favorite_ids=frozenset()):
         "has_layout": bool(lot.layout_image),
 
         "last_updated": lot.last_updated.isoformat() if lot.last_updated else None,
+        "last_updated_display": lot.last_updated_display,
     }
 
 

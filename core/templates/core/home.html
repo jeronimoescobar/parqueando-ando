@@ -1008,6 +1008,17 @@ function applyLotState(lot, options = {}) {
     setFields(card, 'capacity-accessibility', lot.capacity_accessibility);
     setFields(card, 'occupied-accessibility', lot.occupied_accessibility);
 
+    // FR24: Última actualización en tiempo real
+    if (lot.last_updated_display) {
+        setFields(card, 'last-updated', lot.last_updated_display);
+    } else if (lot.last_updated) {
+        const d = new Date(lot.last_updated);
+        if (!isNaN(d.getTime())) {
+            const pad = (n) => String(n).padStart(2, '0');
+            setFields(card, 'last-updated', `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`);
+        }
+    }
+
     const badge = card.querySelector('[data-field="status-badge"]');
     if (badge) {
         badge.className = STATUS_BADGE_CLASSES[lot.occupancy_status] || 'badge bg-secondary';

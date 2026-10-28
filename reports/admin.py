@@ -75,11 +75,11 @@ class ParkingReportAdmin(admin.ModelAdmin):
            ya quedaron marcados como inválidos.
     """
 
-    list_display = ("lot", "report_type", "vehicle_type", "status", "created_at")
+    list_display = ("lot", "user", "report_type", "vehicle_type", "status", "created_at")
     list_display_links = ("lot",)
     list_editable = ("status",)
-    list_filter = ("status", "report_type", "vehicle_type", "lot")
-    search_fields = ("lot__name", "description")
+    list_filter = ("status", "report_type", "vehicle_type", "lot", "user")
+    search_fields = ("lot__name", "description", "user__username", "user__email")
     date_hierarchy = "created_at"
     ordering = ("-created_at",)
     readonly_fields = ("created_at",)

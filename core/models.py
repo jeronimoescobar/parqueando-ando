@@ -183,6 +183,13 @@ class ParkingLot(models.Model):
         """
         return self.notices.filter(active=True)
 
+    @property
+    def last_updated_display(self):
+        """FR24 – Formato amigable de la fecha y hora de última actualización."""
+        if not self.last_updated:
+            return "No disponible"
+        return self.last_updated.strftime("%d/%m/%Y %H:%M")
+
     class Meta:
         ordering = ["name"]
 
@@ -270,6 +277,8 @@ class ParkingSpot(models.Model):
         self.status = new_status
         self.status_updated_at = timezone.now()
         self.save(update_fields=["status", "status_updated_at"])
+        # FR24: Al actualizar un espacio en el plano, se actualiza la fecha del parqueadero
+        self.lot.save()
 
     class Meta:
         ordering = ["label"]
