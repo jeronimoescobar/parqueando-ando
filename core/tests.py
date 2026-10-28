@@ -418,6 +418,6 @@ class DisplayLastUpdateFR24Tests(TestCase):
         """Verifica que la vista de detalle del parqueadero muestre la última actualización (FR24)."""
         response = self.client.get(reverse("parking_detail", kwargs={"slug": self.lot.slug}))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Última actualización:")
+        self.assertContains(response, "Último reporte:")
         self.assertContains(response, 'data-field="last-updated"')
         self.assertContains(response, self.lot.last_updated_display)
