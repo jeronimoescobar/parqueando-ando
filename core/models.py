@@ -185,10 +185,10 @@ class ParkingLot(models.Model):
 
     @property
     def last_updated_display(self):
-        """FR24 – Formato amigable de la fecha y hora de última actualización."""
+        """FR24 – Formato amigable de la fecha y hora de última actualización en hora local de Colombia."""
         if not self.last_updated:
             return "No disponible"
-        return self.last_updated.strftime("%d/%m/%Y %H:%M")
+        return timezone.localtime(self.last_updated).strftime("%d/%m/%Y %H:%M")
 
     class Meta:
         ordering = ["name"]

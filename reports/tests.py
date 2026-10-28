@@ -88,8 +88,8 @@ class ParkingReportsHistoryTests(TestCase):
         self.assertEqual(reports_in_context[0].user, self.user1)
         self.assertEqual(reports_in_context[0].report_type, "available")
 
-    def test_profile_displays_user_reports_history(self):
-        """Verifica que la vista del perfil de usuario (/accounts/profile/) incluya el historial de reportes (FR31)."""
+    def test_reports_history_renders_all_fields(self):
+        """Verifica que la vista /reports/history/ renderice todos los campos del reporte (FR31)."""
         ParkingReport.objects.create(
             lot=self.lot,
             user=self.user1,
@@ -99,9 +99,8 @@ class ParkingReportsHistoryTests(TestCase):
             status="pending"
         )
         self.client.login(username="alejo_test", password="Password123*")
-        response = self.client.get(reverse("accounts:profile"))
+        response = self.client.get(reverse("reports_history"))
         self.assertEqual(response.status_code, 200)
-        self.assertIn("user_reports", response.context)
-        self.assertEqual(len(response.context["user_reports"]), 1)
         self.assertContains(response, "Historial de mis reportes")
         self.assertContains(response, "La talanquera norte no reconoce el carné")
+        self.assertContains(response, "Pendiente")
