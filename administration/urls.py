@@ -17,6 +17,8 @@ from . import views
 #     /dashboard/reports/delete-invalid/
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
+    # FR19 — importar disponibilidad desde una API REST externa
+    path("import-availability/", views.import_external_availability, name="import_external_availability"),
 
     path("mapper/<slug:slug>/", views.spot_mapper, name="spot_mapper"),
     path("mapper/<slug:slug>/create/", views.mapper_create_spot, name="mapper_create_spot"),

@@ -49,6 +49,45 @@
             <span class="badge text-bg-secondary">Sesión: {{ request.user.username }}</span>
         </div>
 
+        {% if messages %}
+        <div class="mb-3" role="status" aria-live="polite">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} py-2 px-3 small mb-2">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- ================================================================
+             FR19: REST API integration
+             Trae la ocupación de los parqueaderos desde una API REST externa
+             (por ejemplo, los sensores de las porterías) y la guarda. La
+             lógica está en core/external_api.py; también se puede correr
+             por consola: python manage.py import_availability --url <URL>
+             ================================================================ -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h6 mb-1"><i class="bi bi-cloud-download" aria-hidden="true"></i> Importar disponibilidad desde una API externa</h2>
+                <p class="text-muted small mb-3">
+                    Consulta la API, valida los datos y actualiza la ocupación de los parqueaderos.
+                    Formato esperado: JSON con una lista <code>parkings</code> de
+                    <code>{slug, occupied_cars, occupied_motorcycles, occupied_accessibility}</code>.
+                </p>
+                <form method="post" action="{% url 'import_external_availability' %}" class="d-flex flex-wrap gap-2">
+                    {% csrf_token %}
+                    <label for="external-api-url" class="visually-hidden">URL de la API externa</label>
+                    <input type="url" name="url" id="external-api-url" class="form-control form-control-sm flex-grow-1"
+                           style="min-width: 260px; max-width: 640px;"
+                           value="{{ external_api_url }}" placeholder="https://..." required>
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Importar ahora
+                    </button>
+                </form>
+                {% if external_api_url and 'simulador' in external_api_url %}
+                <p class="form-text mb-0">Por defecto se usa el simulador incluido en el proyecto (modo desarrollo).</p>
+                {% endif %}
+            </div>
+        </div>
+
         <div class="row g-3">
             {% for lot in lots %}
             {% with counts=lot.spot_status_counts %}

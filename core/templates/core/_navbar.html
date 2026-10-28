@@ -4,6 +4,7 @@
     Uso: {% include "core/_navbar.html" with active="home" %}
     FR2  – muestra "Iniciar sesión" o el usuario + "Cerrar sesión".
     FR35 – link a la página de información general de los parqueaderos.
+    FR33 – link a las estadísticas de ocupación.
 {% endcomment %}
 <nav class="navbar navbar-expand bg-white border-bottom shadow-sm">
     <div class="container flex-wrap gap-2">
@@ -17,6 +18,10 @@
             <a href="{% url 'parking_info' %}"
                class="btn btn-sm {% if active == 'info' %}btn-primary{% else %}btn-outline-primary{% endif %}">
                 <i class="bi bi-info-circle" aria-hidden="true"></i> Información
+            </a>
+            <a href="{% url 'occupancy_stats' %}"
+               class="btn btn-sm {% if active == 'stats' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <i class="bi bi-bar-chart-line" aria-hidden="true"></i> Estadísticas
             </a>
 
             {% if user.is_authenticated %}

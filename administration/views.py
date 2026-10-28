@@ -6,7 +6,10 @@ no es staff — el mismo login que usa /admin/ (mismo modelo de usuario,
 misma sesión de Django).
 """
 
+from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.db.models import Count
 from django.utils.dateparse import parse_date
 from datetime import datetime, time
@@ -16,6 +19,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from core.external_api import ExternalAPIError, import_from_url
 from core.models import ParkingLot, ParkingSpot
 from reports.models import ParkingReport
 
@@ -41,7 +45,54 @@ def dashboard(request):
     return render(request, "administration/dashboard.html", {
         "lots": lots,
         "pending_reports_count": pending_reports_count,
+        "external_api_url": _default_external_api_url(request),
     })
+
+
+# ── FR19: importar disponibilidad desde una API REST externa ──────────────────
+
+
+def _default_external_api_url(request):
+    """
+    URL que se propone en el formulario: la configurada en
+    EXTERNAL_PARKING_API_URL o, en desarrollo, el simulador incluido.
+    """
+    if settings.EXTERNAL_PARKING_API_URL:
+        return settings.EXTERNAL_PARKING_API_URL
+    if settings.DEBUG:
+        return request.build_absolute_uri(reverse("external_api_simulator"))
+    return ""
+
+
+@staff_member_required
+@require_POST
+def import_external_availability(request):
+    """
+    FR19 – Trae la ocupación desde la API externa y la guarda.
+
+    Solo staff, solo POST y solo URLs http/https. Toda la lógica (consulta,
+    validación del JSON, guardado) está en core/external_api.py; aquí solo
+    se traduce el resultado a mensajes para el administrador.
+    """
+    url = (request.POST.get("url") or "").strip()
+    try:
+        URLValidator(schemes=["http", "https"])(url)
+    except ValidationError:
+        messages.error(request, "Escribe una URL válida que empiece por http:// o https://.")
+        return redirect("dashboard")
+
+    try:
+        result = import_from_url(url)
+    except ExternalAPIError as exc:
+        messages.error(request, f"No se importó nada. {exc}")
+        return redirect("dashboard")
+
+    messages.success(request, f"Importación desde la API externa: {result.summary}")
+    for name, field, received, applied in result.adjusted:
+        messages.warning(request, f"{name}: {field} = {received} supera la capacidad; se guardó {applied}.")
+    for slug, reason in result.skipped:
+        messages.warning(request, f"Se ignoró «{slug}»: {reason}.")
+    return redirect("dashboard")
 
 
 # ── Mapeador visual de espacios (clic para ubicar, arrastrar, girar) ───────────

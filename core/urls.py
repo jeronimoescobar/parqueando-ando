@@ -11,6 +11,12 @@ urlpatterns = [
     # FR35 — información general de los parqueaderos (horarios, tarifas, normas...)
     path("informacion/", views.parking_info_view, name="parking_info"),
 
+    # FR33 — estadísticas de ocupación (públicas)
+    path("estadisticas/", views.occupancy_statistics_view, name="occupancy_stats"),
+
+    # FR19 — API externa de prueba (solo con DEBUG=True); ver core/external_api.py
+    path("api/simulador/disponibilidad/", views.external_api_simulator, name="external_api_simulator"),
+
     # ── APIs JSON que mantienen la página viva sin recargarla (Sprint 3) ──
     # El home consulta estas rutas con fetch cada cierto tiempo y repinta
     # solo lo que cambió, para que la persona no pierda el scroll.

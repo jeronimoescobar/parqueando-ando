@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -146,3 +147,12 @@ AUTHENTICATION_BACKENDS = [
     'accounts.backends.EmailOrUsernameModelBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+
+# FR19 – API REST externa de la que se importa la disponibilidad de los
+# parqueaderos (ver core/external_api.py). Se configura con una variable de
+# entorno para no dejar URLs fijas en el código:
+#     export EXTERNAL_PARKING_API_URL="https://api.ejemplo.edu.co/parqueaderos"
+# Si está vacía y DEBUG=True, el dashboard propone el simulador incluido
+# (/api/simulador/disponibilidad/).
+EXTERNAL_PARKING_API_URL = os.environ.get("EXTERNAL_PARKING_API_URL", "")

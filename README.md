@@ -28,10 +28,13 @@ coordenadas y sus apodos de búsqueda.
 | `/` | Home: buscador, mapa, disponibilidad, plano interactivo, reportes | Público |
 | `/?estado=...&vehiculo=...` | Home filtrado (FR12): `estado` = `available`/`limited`/`full`, `vehiculo` = `car`/`motorcycle`/`accessibility` | Público |
 | `/informacion/` | Información general de los parqueaderos (FR35): horarios, tarifas, pagos, normas, contacto | Público |
+| `/estadisticas/` | Estadísticas de ocupación (FR33): general, por parqueadero, por tipo de celda y movimiento de las últimas 24 h | Público |
 | `/accounts/login/` | Iniciar sesión (FR2). Staff → dashboard, resto → home | Público |
 | `/accounts/profile/` | Perfil de usuario (FR3): editar datos y contraseña | Solo usuarios |
 | `/api/notifications/` | Notificaciones de disponibilidad (FR14) | Solo usuarios |
 | `/dashboard/statistics/` | Reportes y estadísticas (FR18) | Solo staff |
+| `/dashboard/import-availability/` | Importar disponibilidad desde una API REST externa (FR19), botón en el dashboard | Solo staff |
+| `/api/simulador/disponibilidad/` | API externa de prueba para FR19 (solo con `DEBUG=True`) | Público |
 | `/parking/<slug>/` | Detalle de un parqueadero | Público |
 | `/dashboard/` | Panel de administrador | Solo staff |
 | `/dashboard/mapper/<slug>/` | Mapeador visual del plano | Solo staff |
@@ -97,6 +100,31 @@ Estilo "Urban Solutions": azul noche, bronce, crema/mármol; Roboto Condensed (t
   edita `--pa-base-size` en el bloque "FASE 6" de `theme.css`.
 - Fuentes e íconos se cargan por CDN (como Bootstrap); sin internet se usan fuentes del sistema.
 
+## Sprint 4 — importar desde una API externa (FR19)
+
+El sistema puede traer la ocupación de los parqueaderos desde otra API REST
+(por ejemplo, los sensores de las porterías) en vez de depender solo de los
+reportes de los usuarios. La API debe responder a un `GET` con JSON así:
+
+```json
+{"parkings": [
+  {"slug": "parqueadero-norte", "occupied_cars": 120, "occupied_motorcycles": 30, "occupied_accessibility": 2}
+]}
+```
+
+Se valida todo antes de guardar: parqueaderos que no existen o valores que no
+son enteros >= 0 se ignoran (y se avisa), y lo que supere la capacidad se ajusta.
+Hay dos formas de correrlo:
+
+- **Dashboard:** `/dashboard/` → "Importar disponibilidad desde una API externa".
+- **Consola** (sirve para programarlo cada X minutos):
+  `python manage.py import_availability --url <URL>`
+
+La URL se configura con la variable de entorno `EXTERNAL_PARKING_API_URL`. Como
+EAFIT no publica una API real, en desarrollo el proyecto trae un simulador en
+`/api/simulador/disponibilidad/` y el dashboard lo propone por defecto. La
+lógica está en `core/external_api.py`.
+
 ## Login (FR2) y favoritos
 
 El login (FR2) ya está en `/accounts/login/` y funciona con cualquier usuario
@@ -129,7 +157,9 @@ tiene una URL llamada `register`, el formulario de login muestra solo el link
 - `core/` — modelos, vistas públicas y APIs, búsqueda (`search.py`), favoritos
   (`favorites.py`), scraping del Metro (`metro_status.py`), login/logout
   (`auth_views.py`, FR2), filtros (`filters.py`, FR12) e información general de
-  los parqueaderos (`parking_info.py`, FR35 — tarifas, horarios, etc. se editan ahí).
+  los parqueaderos (`parking_info.py`, FR35 — tarifas, horarios, etc. se editan ahí),
+  importación desde una API externa (`external_api.py`, FR19) y estadísticas de
+  ocupación (`occupancy_stats.py`, FR33).
 - `reports/` — reportes de usuarios (espacio disponible/ocupado/información incorrecta).
 - `administration/` — dashboard, mapeador visual del plano, gestión de reportes, y `/admin/`.
 

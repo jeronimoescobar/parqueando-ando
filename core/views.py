@@ -24,10 +24,20 @@ Sprint 3 — actualización en vivo, búsqueda y favoritos:
                             vehículo (FR12, ver core/filters.py).
     parking_info_view()   → FR35, información general de los parqueaderos.
 
+Sprint 4:
+    occupancy_statistics_view() → FR33, estadísticas de ocupación para los
+                            usuarios (cálculos en core/occupancy_stats.py).
+    external_api_simulator()    → FR19, API REST "externa" de prueba que
+                            responde con el formato que importa
+                            core/external_api.py (solo con DEBUG=True).
+
 El login/logout (FR2) está en core/auth_views.py.
 """
 
-from django.http import JsonResponse
+import random
+
+from django.conf import settings
+from django.http import Http404, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from datetime import timedelta
@@ -37,7 +47,7 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
-from . import parking_info
+from . import occupancy_stats, parking_info
 from .favorites import favorite_lot_ids, toggle_favorite
 from .filters import (
     STATUS_OPTIONS,
@@ -491,3 +501,54 @@ def contact_admin(request):
         else:
             messages.error(request, 'Por favor completa todos los campos obligatorios.')
     return render(request, 'core/contact.html')
+
+
+# ── Sprint 4 ──────────────────────────────────────────────────────────────────
+
+
+def occupancy_statistics_view(request):
+    """
+    FR33 – Parking occupancy statistics.
+
+    Página pública con la ocupación del campus: general, por parqueadero
+    (del más lleno al más libre), por tipo de celda y la actividad de las
+    últimas 24 horas según los reportes de los usuarios. Los cálculos están
+    en core/occupancy_stats.py.
+    """
+    stats = occupancy_stats.build_statistics(ParkingLot.objects.all())
+    return render(request, "core/occupancy_stats.html", stats)
+
+
+def external_api_simulator(request):
+    """
+    FR19 – Simulador de la API REST externa de disponibilidad.
+
+    EAFIT no publica una API con la ocupación de sus parqueaderos, así que
+    para desarrollar y mostrar la importación (core/external_api.py) este
+    endpoint hace de "sistema externo": responde con el formato esperado y
+    una ocupación aleatoria pero realista para cada parqueadero.
+
+    Solo existe con DEBUG=True; en producción se configuraría la URL de la
+    API real en la variable de entorno EXTERNAL_PARKING_API_URL.
+    """
+    if not settings.DEBUG:
+        raise Http404
+
+    parkings = []
+    for lot in ParkingLot.objects.all():
+        entry = {"slug": lot.slug, "name": lot.name}
+        for occupied_field, capacity_field in (
+            ("occupied_cars", "capacity_cars"),
+            ("occupied_motorcycles", "capacity_motorcycles"),
+            ("occupied_accessibility", "capacity_accessibility"),
+        ):
+            capacity = getattr(lot, capacity_field)
+            # Entre 20% y 100% de la capacidad, para que se vean estados distintos.
+            entry[occupied_field] = round(capacity * random.uniform(0.2, 1.0))
+        parkings.append(entry)
+
+    return JsonResponse({
+        "source": "Simulador de sensores de Parqueando Ando (FR19)",
+        "generated_at": timezone.now().isoformat(),
+        "parkings": parkings,
+    })
