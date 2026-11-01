@@ -176,3 +176,20 @@ class FavoriteParkingLotAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+# FR13 – Historial de disponibilidad: solo lectura (lo genera el sistema).
+from core.models import AvailabilitySnapshot  # noqa: E402
+
+
+@admin.register(AvailabilitySnapshot)
+class AvailabilitySnapshotAdmin(admin.ModelAdmin):
+    list_display = ("lot", "recorded_at", "occupied_cars", "occupied_motorcycles", "occupied_accessibility", "total_capacity")
+    list_filter = ("lot",)
+    date_hierarchy = "recorded_at"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

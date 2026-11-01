@@ -28,6 +28,7 @@ coordenadas y sus apodos de búsqueda.
 | `/` | Home: buscador, mapa, disponibilidad, plano interactivo, reportes | Público |
 | `/?estado=...&vehiculo=...` | Home filtrado (FR12): `estado` = `available`/`limited`/`full`, `vehiculo` = `car`/`motorcycle`/`accessibility` | Público |
 | `/informacion/` | Información general de los parqueaderos (FR35): horarios, tarifas, pagos, normas, contacto | Público |
+| `/historial/` | Historial de disponibilidad (FR13): `?lot=<slug>&periodo=24h/7d/30d`, resumen, promedio por hora y registros | Público |
 | `/estadisticas/` | Estadísticas de ocupación (FR33): general, por parqueadero, por tipo de celda y movimiento de las últimas 24 h | Público |
 | `/accounts/login/` | Iniciar sesión (FR2). Staff → dashboard, resto → home | Público |
 | `/accounts/profile/` | Perfil de usuario (FR3): editar datos y contraseña | Solo usuarios |
@@ -124,6 +125,29 @@ La URL se configura con la variable de entorno `EXTERNAL_PARKING_API_URL`. Como
 EAFIT no publica una API real, en desarrollo el proyecto trae un simulador en
 `/api/simulador/disponibilidad/` y el dashboard lo propone por defecto. La
 lógica está en `core/external_api.py`.
+
+## Historial de disponibilidad (FR13)
+
+Cada vez que cambia la ocupación de un parqueadero (reporte de un usuario,
+cambio en el plano, importación desde la API externa o edición en `/admin/`)
+se guarda un `AvailabilitySnapshot` (`core/models.py`). Si la ocupación no
+cambió, no se guarda nada. La página `/historial/` los muestra por parqueadero
+y periodo. La lógica está en `core/availability_history.py` y la señal que lo
+dispara en `core/signals.py`. La migración `0015` crea un primer registro por
+parqueadero existente. Después de actualizar, corre `python manage.py migrate`.
+
+## Autenticación segura (FR20)
+
+- **Bloqueo por intentos fallidos:** 5 intentos fallidos con el mismo usuario
+  desde la misma IP bloquean el login 15 minutos (`accounts/throttle.py`). Con
+  varios servidores hay que configurar una caché compartida.
+- **Contraseñas** de mínimo 10 caracteres (más los validadores de Django).
+- **Cookies/sesión:** `HttpOnly`, `SameSite=Lax`, la sesión caduca a las 8 horas
+  o al cerrar el navegador.
+- **Producción:** con `DJANGO_DEBUG=0` la app exige `DJANGO_SECRET_KEY` y
+  `DJANGO_ALLOWED_HOSTS`, y activa HTTPS obligatorio, cookies `Secure` y HSTS.
+  En desarrollo no hace falta configurar nada.
+- **Login por correo** sin distinguir mayúsculas; un correo repetido ya no tumba el login.
 
 ## Login (FR2) y favoritos
 

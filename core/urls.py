@@ -14,6 +14,9 @@ urlpatterns = [
     # FR33 — estadísticas de ocupación (públicas)
     path("estadisticas/", views.occupancy_statistics_view, name="occupancy_stats"),
 
+    # FR13 — historial de disponibilidad (público)
+    path("historial/", views.availability_history_view, name="availability_history"),
+
     # FR19 — API externa de prueba (solo con DEBUG=True); ver core/external_api.py
     path("api/simulador/disponibilidad/", views.external_api_simulator, name="external_api_simulator"),
 
