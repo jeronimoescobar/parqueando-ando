@@ -47,7 +47,7 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
-from . import occupancy_stats, parking_info
+from . import availability_history, occupancy_stats, parking_info
 from .favorites import favorite_lot_ids, toggle_favorite
 from .filters import (
     STATUS_OPTIONS,
@@ -517,6 +517,29 @@ def occupancy_statistics_view(request):
     """
     stats = occupancy_stats.build_statistics(ParkingLot.objects.all())
     return render(request, "core/occupancy_stats.html", stats)
+
+
+def availability_history_view(request):
+    """
+    FR13 – View parking availability history.
+
+    Página pública con el historial de ocupación de un parqueadero:
+    resumen del periodo (promedio, pico y mínimo), promedio por hora del
+    día y los registros uno por uno. Se elige el parqueadero con ?lot=<slug>
+    y el periodo con ?periodo=24h|7d|30d. Cálculos en core/availability_history.py.
+    """
+    lots = list(ParkingLot.objects.all())
+    selected = None
+    slug = request.GET.get("lot", "")
+    if slug:
+        selected = next((lot for lot in lots if lot.slug == slug), None)
+    if selected is None and lots:
+        selected = lots[0]
+
+    context = {"lots": lots, "selected": selected}
+    if selected is not None:
+        context.update(availability_history.build_history(selected, request.GET.get("periodo", "")))
+    return render(request, "core/availability_history.html", context)
 
 
 def external_api_simulator(request):

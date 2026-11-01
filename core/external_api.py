@@ -39,6 +39,7 @@ import requests
 from django.db import transaction
 from django.utils import timezone
 
+from .availability_history import record_snapshot
 from .models import ParkingLot
 
 REQUEST_TIMEOUT = 8  # segundos
@@ -157,6 +158,9 @@ def apply_entries(entries, source=""):
         # update() en vez de save(): escribe solo estos campos, sin pisar
         # otros cambios que estén ocurriendo al mismo tiempo.
         ParkingLot.objects.filter(pk=lot.pk).update(last_updated=timezone.now(), **changes)
+        # update() no dispara señales, así que el historial (FR13) se anota a mano.
+        lot.refresh_from_db()
+        record_snapshot(lot)
         result.updated.append(lot.name)
 
     return result

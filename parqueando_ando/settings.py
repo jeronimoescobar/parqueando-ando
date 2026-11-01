@@ -20,13 +20,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%zxp$%3(8bet-r4((6jvugjef&pa+vpx!++&80_iiov*^8ilpy'
+# FR20 – La configuración sensible sale de variables de entorno.
+#   DJANGO_DEBUG=0          -> modo producción (por defecto sigue en 1 para desarrollar)
+#   DJANGO_SECRET_KEY=...   -> obligatoria cuando DJANGO_DEBUG=0
+#   DJANGO_ALLOWED_HOSTS    -> dominios separados por coma (obligatoria con DEBUG=0)
+DEBUG = os.environ.get("DJANGO_DEBUG", "1") != "0"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if DEBUG:
+    # Solo para desarrollo local.
+    SECRET_KEY = os.environ.get(
+        "DJANGO_SECRET_KEY",
+        "django-insecure-%zxp$%3(8bet-r4((6jvugjef&pa+vpx!++&80_iiov*^8ilpy",
+    )
+else:
+    SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]  # sin clave no arranca, a propósito
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if h.strip()]
 
 
 # Application definition
@@ -94,6 +103,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 10},  # FR20: contraseñas de mínimo 10 caracteres
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -156,3 +166,21 @@ AUTHENTICATION_BACKENDS = [
 # Si está vacía y DEBUG=True, el dashboard propone el simulador incluido
 # (/api/simulador/disponibilidad/).
 EXTERNAL_PARKING_API_URL = os.environ.get("EXTERNAL_PARKING_API_URL", "")
+
+
+# ── FR20 – Autenticación segura: sesiones y cookies ─────────────────────────
+SESSION_COOKIE_HTTPONLY = True        # el JavaScript no puede leer la cookie de sesión
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 60 * 60 * 8      # la sesión caduca a las 8 horas
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+X_FRAME_OPTIONS = 'DENY'
+
+if not DEBUG:
+    # Solo HTTPS en producción.
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True

@@ -9,6 +9,8 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView
 
+from . import throttle
+
 # Import the core logic for favorites
 from core.favorites import attach_session_favorites_to_user
 
@@ -26,8 +28,34 @@ class UserLoginView(LoginView):
     template_name = "accounts/login.html"
     redirect_authenticated_user = True
 
+    def post(self, request, *args, **kwargs):
+        # FR20 – Si esta combinación usuario+IP ya agotó sus intentos, ni
+        # siquiera se revisa la contraseña (así no sirve para seguir adivinando).
+        identifier = request.POST.get("username", "")
+        if throttle.is_locked(request, identifier):
+            form = self.get_form()
+            messages.error(
+                request,
+                f"Demasiados intentos fallidos. Espera {throttle.lockout_minutes()} minutos "
+                "e inténtalo de nuevo.",
+            )
+            return self.render_to_response(self.get_context_data(form=form), status=429)
+        return super().post(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+        identifier = self.request.POST.get("username", "")
+        failures = throttle.register_failure(self.request, identifier)
+        if failures >= throttle.MAX_ATTEMPTS:
+            messages.error(
+                self.request,
+                f"Demasiados intentos fallidos. Espera {throttle.lockout_minutes()} minutos "
+                "e inténtalo de nuevo.",
+            )
+        return super().form_invalid(form)
+
     def form_valid(self, form):
         user = form.get_user()
+        throttle.reset(self.request, self.request.POST.get("username", ""))
         log_user_in(self.request, user)
 
         nombre = user.get_short_name() or user.get_username()

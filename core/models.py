@@ -441,3 +441,43 @@ class ParkingNotificationSubscription(models.Model):
 
     def __str__(self):
         return f"{self.user.username} → {self.lot.name}"
+
+
+class AvailabilitySnapshot(models.Model):
+    """
+    FR13 – Foto de la ocupación de un parqueadero en un momento dado.
+
+    Se guarda una cada vez que cambia la ocupación (reporte de usuario,
+    importación desde la API externa, cambio en el plano o en /admin/), y
+    con ellas se arma el historial de disponibilidad. Ver core/availability_history.py.
+    """
+
+    lot = models.ForeignKey(ParkingLot, on_delete=models.CASCADE, related_name="snapshots")
+    occupied_cars = models.PositiveIntegerField(default=0)
+    occupied_motorcycles = models.PositiveIntegerField(default=0)
+    occupied_accessibility = models.PositiveIntegerField(default=0)
+    total_capacity = models.PositiveIntegerField(default=0)
+    recorded_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["-recorded_at", "-id"]
+        verbose_name = "Registro de disponibilidad"
+        verbose_name_plural = "Historial de disponibilidad"
+        indexes = [models.Index(fields=["lot", "-recorded_at"])]
+
+    @property
+    def occupied_spaces(self):
+        return self.occupied_cars + self.occupied_motorcycles + self.occupied_accessibility
+
+    @property
+    def available_spaces(self):
+        return max(self.total_capacity - self.occupied_spaces, 0)
+
+    @property
+    def occupancy_percentage(self):
+        if not self.total_capacity:
+            return 0.0
+        return round(min(self.occupied_spaces / self.total_capacity, 1.0) * 100, 1)
+
+    def __str__(self):
+        return f"{self.lot.name} · {self.occupied_spaces}/{self.total_capacity} · {self.recorded_at:%Y-%m-%d %H:%M}"
