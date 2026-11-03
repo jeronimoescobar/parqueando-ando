@@ -1709,7 +1709,8 @@ function renderMetroLineStatus(lineStatus) {
         else if (status.includes('restring')) cls = 'text-bg-warning text-dark';
         else if (status.includes('sin operaci')) cls = 'text-bg-danger';
         const route = item.route ? ` — ${item.route}` : '';
-        return `<span class="badge ${cls}" title="${item.line}${route}">${item.line}: ${item.status}</span>`;
+        const lamp = status.includes('normal') ? '🟢' : status.includes('restring') ? '🟡' : status.includes('sin operaci') ? '🔴' : '⚪';
+        return `<span class="metro-signal ${cls}" title="${item.line}${route}"><span class="metro-signal-light" aria-hidden="true">${lamp}</span><span class="metro-signal-copy"><strong>${item.line}</strong><span>${item.status}</span></span></span>`;
     }).join('');
 }
 

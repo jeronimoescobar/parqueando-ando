@@ -558,6 +558,22 @@ p, li, td, th, label, .form-text { line-height: 1.6; }
 .badge { font-size: .85rem; padding: .45em .8em; line-height: 1.2; }
 .lot-card .badge { font-size: .9rem; padding: .5em .9em; }
 .metro-updated-badge { font-size: .85rem; }
+.metro-signal { display:inline-flex; align-items:center; gap:.7rem; min-width:180px; padding:.65rem .9rem; border:1px solid var(--pa-line, #d8d1c5); border-radius:999px; background:var(--pa-paper, #fff); color:var(--pa-ink, #182536); box-shadow:0 3px 10px rgba(24,37,54,.08); }
+.metro-signal-light { display:grid; place-items:center; width:2rem; height:2rem; flex:none; border-radius:50%; background:rgba(24,37,54,.07); font-size:1.05rem; }
+.metro-signal-copy { display:flex; flex-direction:column; line-height:1.15; }
+.metro-signal-copy strong { font-family:'Roboto Condensed',sans-serif; font-size:.95rem; }
+.metro-signal-copy span { font-size:.8rem; }
+.metro-signal.text-bg-success { border-color:#80b896; background:#e3f3e8!important; color:#174d2d!important; }
+.metro-signal.text-bg-warning { border-color:#d5a340; background:#fff0bf!important; color:#593900!important; }
+.metro-signal.text-bg-danger { border-color:#c87570; background:#fae3e0!important; color:#762a28!important; }
+.metro-signal.text-bg-secondary { border-color:#aab3bc; background:#e8edf1!important; color:#283746!important; }
+.metro-signal .metro-signal-copy,
+.metro-signal .metro-signal-copy strong,
+.metro-signal .metro-signal-copy span { color:inherit!important; }
+.metro-signal-light { box-shadow:inset 0 0 0 1px rgba(24,37,54,.12); }
+@media (max-width: 480px) {
+    .metro-signal { min-width:0; flex:1 1 100%; border-radius:1rem; }
+}
 #map-updated-badge { font-size: .85rem; }
 .filter-label { font-size: .85rem; min-width: 7rem; }
 .chip-count { font-size: .85rem; }

@@ -2,6 +2,10 @@ Django
 Pillow
 requests
 beautifulsoup4
+dj-database-url
+psycopg[binary]
+gunicorn
+whitenoise
 
 # Opcional: solo necesario para leer el semáforo "Estado de las líneas"
 # del Metro (se pinta con JavaScript en su sitio, así que requiere un

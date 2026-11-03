@@ -277,8 +277,24 @@ class ParkingSpot(models.Model):
         self.status = new_status
         self.status_updated_at = timezone.now()
         self.save(update_fields=["status", "status_updated_at"])
-        # FR24: Al actualizar un espacio en el plano, se actualiza la fecha del parqueadero
-        self.lot.save()
+        # El plano montado alimenta la disponibilidad general del sitio.
+        sync_lot_occupancy_from_spots(self.lot)
+        self.lot.refresh_from_db()
+
+
+def sync_lot_occupancy_from_spots(lot):
+    """Sincroniza el resumen público con los estados vigentes del plano."""
+    spots = list(lot.spots.all())
+    if not spots:
+        return
+    occupied = {"car": 0, "motorcycle": 0, "accessibility": 0}
+    for spot in spots:
+        if spot.display_status == "occupied":
+            occupied[spot.vehicle_type] = occupied.get(spot.vehicle_type, 0) + 1
+    lot.occupied_cars = occupied["car"]
+    lot.occupied_motorcycles = occupied["motorcycle"]
+    lot.occupied_accessibility = occupied["accessibility"]
+    lot.save(update_fields=["occupied_cars", "occupied_motorcycles", "occupied_accessibility", "last_updated"])
 
     class Meta:
         ordering = ["label"]

@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db.models import Count
 from django.utils.dateparse import parse_date
+from django.utils import timezone
 from datetime import datetime, time
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
@@ -22,6 +23,11 @@ from django.views.decorators.http import require_POST
 from core.external_api import ExternalAPIError, import_from_url
 from core.models import ParkingLot, ParkingSpot
 from reports.models import ParkingReport
+from .models import AdminActionLog
+
+
+def log_admin_action(request, action, target, **details):
+    AdminActionLog.objects.create(actor=request.user, action=action, target=str(target), details=details)
 
 
 @staff_member_required
@@ -42,10 +48,19 @@ def dashboard(request):
     """
     lots = ParkingLot.objects.all()
     pending_reports_count = ParkingReport.objects.filter(status="pending").count()
+    admin_stats = {
+        "reports_total": ParkingReport.objects.count(),
+        "reports_valid": ParkingReport.objects.filter(status="valid").count(),
+        "reports_invalid": ParkingReport.objects.filter(status="invalid").count(),
+        "reports_pending": pending_reports_count,
+        "actions_today": AdminActionLog.objects.filter(created_at__date=timezone.localdate()).count(),
+    }
     return render(request, "administration/dashboard.html", {
         "lots": lots,
         "pending_reports_count": pending_reports_count,
         "external_api_url": _default_external_api_url(request),
+        "admin_stats": admin_stats,
+        "recent_admin_actions": AdminActionLog.objects.select_related("actor")[:8],
     })
 
 
@@ -374,6 +389,7 @@ def report_set_status(request, report_id):
 
     report.status = new_status
     report.save(update_fields=["status"])
+    log_admin_action(request, "report_status", f"Reporte #{report.id}", status=new_status)
     messages.success(request, f"Reporte #{report.id} marcado como '{report.get_status_display()}'.")
 
     return _redirect_to_reports(request)
@@ -384,7 +400,10 @@ def report_set_status(request, report_id):
 def report_delete(request, report_id):
     """Elimina un reporte individual (cualquier estado) desde su fila."""
     report = get_object_or_404(ParkingReport, id=report_id)
+    report_summary = f"Reporte #{report.id}"
+    report_status = report.status
     report.delete()
+    log_admin_action(request, "report_delete", report_summary, previous_status=report_status)
     messages.success(request, f"Reporte #{report_id} eliminado.")
     return _redirect_to_reports(request)
 
@@ -399,6 +418,7 @@ def reports_delete_all_invalid(request):
     de Django, pero accesible desde el dashboard con un solo botón.
     """
     deleted_count, _ = ParkingReport.objects.filter(status="invalid").delete()
+    log_admin_action(request, "report_bulk_delete", "Reportes inválidos", deleted_count=deleted_count)
     if deleted_count:
         messages.success(request, f"Se eliminaron {deleted_count} reporte(s) inválido(s).")
     else:

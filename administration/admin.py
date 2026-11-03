@@ -11,6 +11,25 @@ cambia en qué archivo vive el código.
 from django.contrib import admin
 
 from core.models import FavoriteParkingLot, ParkingLot, ParkingLotNotice, ParkingSpot, ParkingRule
+from .models import AdminActionLog
+
+
+@admin.register(AdminActionLog)
+class AdminActionLogAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "actor", "action", "target")
+    list_filter = ("action", "created_at")
+    search_fields = ("target", "actor__username")
+    readonly_fields = ("actor", "action", "target", "details", "created_at")
+    ordering = ("-created_at",)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class ParkingSpotInline(admin.TabularInline):
@@ -74,6 +93,19 @@ class ParkingLotAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     readonly_fields = ('last_updated',)
     inlines = [ParkingSpotInline, ParkingLotNoticeInline, ParkingRuleInline]
+
+    def save_model(self, request, obj, form, change):
+        before = None
+        if change:
+            previous = ParkingLot.objects.get(pk=obj.pk)
+            before = {field: str(getattr(previous, field)) for field in form.changed_data}
+        super().save_model(request, obj, form, change)
+        AdminActionLog.objects.create(
+            actor=request.user,
+            action="parking_lot_update" if change else "parking_lot_create",
+            target=obj.name,
+            details={"changed_fields": form.changed_data, "before": before or {}},
+        )
 
     fieldsets = (
         ("Información general", {
