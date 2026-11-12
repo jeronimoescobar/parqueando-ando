@@ -12,6 +12,7 @@ source venv/bin/activate       # macOS / Linux
 
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py collectstatic --noinput
 python manage.py createsuperuser
 python manage.py runserver
 ```
@@ -20,6 +21,17 @@ Abre [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
 Los 4 parqueaderos del campus se crean solos al correr `migrate`, ya con sus
 coordenadas y sus apodos de búsqueda.
+
+## Ejecutar las pruebas
+
+El proyecto usa `CompressedManifestStaticFilesStorage` de WhiteNoise, por lo que
+antes de correr la suite de pruebas por primera vez es necesario generar el
+manifiesto de archivos estáticos con `collectstatic`:
+
+```bash
+python manage.py collectstatic --noinput
+python manage.py test
+```
 
 ## Rutas principales
 

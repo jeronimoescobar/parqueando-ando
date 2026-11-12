@@ -19,6 +19,9 @@ db.sqlite3
 .idea/
 .DS_Store
 
+# Archivos estáticos generados
+staticfiles/
+
 # Archivos temporales de trabajo
 scratch/
 component_diagram_final.png
